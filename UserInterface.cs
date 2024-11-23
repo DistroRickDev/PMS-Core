@@ -18,7 +18,7 @@ namespace PMSCore
         /// <returns>
         /// A string representing the user's unique ID.
         /// </returns>
-        string GetUserID();
+        public string GetUserID();
 
         /// <summary>
         /// Authenticates the user with the given username.
@@ -27,7 +27,7 @@ namespace PMSCore
         /// <returns>
         /// <c>true</c> if the login is successful; otherwise, <c>false</c>.
         /// </returns>
-        bool Login(string userName);
+        public bool Login(string userName);
 
         /// <summary>
         /// Registers a new user with the given username.
@@ -36,13 +36,13 @@ namespace PMSCore
         /// <returns>
         /// <c>true</c> if registration is successful; otherwise, <c>false</c>.
         /// </returns>
-        bool Register(string userName);
+        public bool Register(string userName);
 
         /// <summary>
         /// Assigns a specific permission to the user.
         /// </summary>
         /// <param name="permission">The permission object to be assigned to the user.</param>
-        void SetPermission(Permission permission);
+        public void SetPermission(Permission permission);
 
         /// <summary>
         /// Retrieves the user's assigned permission.
@@ -50,6 +50,6 @@ namespace PMSCore
         /// <returns>
         /// A <see cref="Permission"/> object representing the user's permission.
         /// </returns>
-        Permission GetPermission();
+        public Permission GetPermission();
     }
 }

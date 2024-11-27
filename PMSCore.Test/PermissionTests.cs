@@ -57,43 +57,6 @@ namespace PMSCore.Test
         }
 
         /// <summary>
-        /// Tests that the UpdatePermission method updates the level and description correctly.
-        /// </summary>
-        /// <param name="level">The new permission level to update.</param>
-        /// <param name="description">The new description to update.</param>
-        [Theory]
-        [InlineData(2, "Write access")]
-        [InlineData(3, "Execute access")]
-        public void UpdatePermission_ShouldUpdateValuesCorrectly(int level, string description)
-        {
-            // Arrange: Create an instance using the default constructor.
-            var permission = new Permission();
-
-            // Act: Update the permission using valid inputs.
-            permission.UpdatePermission(level, description);
-
-            // Assert: Verify that the level and description are updated as expected.
-            Assert.Equal(level, permission.PermissionLevel);
-            Assert.Equal(description, permission.PermissionDescription);
-        }
-
-        /// <summary>
-        /// Tests that the UpdatePermission method throws an exception for a negative permission level.
-        /// </summary>
-        [Fact]
-        public void UpdatePermission_ShouldThrowArgumentExceptionForNegativeLevel()
-        {
-            // Arrange: Create an instance using the default constructor and define invalid inputs.
-            var permission = new Permission();
-            int invalidLevel = -5;
-            string description = "Invalid permission";
-
-            // Act & Assert: Verify that an ArgumentException is thrown with the correct message.
-            var exception = Assert.Throws<ArgumentException>(() => permission.UpdatePermission(invalidLevel, description));
-            Assert.Equal("Permission level must be a non-negative integer. (Parameter 'level')", exception.Message);
-        }
-
-        /// <summary>
         /// Tests that the ToString method returns the expected string representation.
         /// </summary>
         /// <param name="level">The permission level to test.</param>

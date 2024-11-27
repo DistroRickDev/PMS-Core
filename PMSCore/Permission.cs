@@ -49,21 +49,6 @@ namespace PMSCore
         }
 
         /// <summary>
-        /// Updates the permission level and description.
-        /// </summary>
-        /// <param name="level">The new permission level. Must be non-negative.</param>
-        /// <param name="description">The new permission description.</param>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="level"/> is negative.</exception>
-        public void UpdatePermission(int level, string description)
-        {
-            if (level < 0)
-                throw new ArgumentException("Permission level must be a non-negative integer.", nameof(level));
-
-            PermissionLevel = level;
-            PermissionDescription = description;
-        }
-
-        /// <summary>
         /// Returns a string representation of the permission.
         /// </summary>
         /// <returns>A string combining the permission level and description.</returns>

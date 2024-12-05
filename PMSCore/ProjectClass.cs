@@ -1,50 +1,87 @@
 ﻿using System;
-using System.Collections.Generic;
+using Xunit;
+using PMSCore;
 
-namespace PMSCore {
-    //class Task with attributes: Name, Description, Status; private attribute Status demonstrates encapsulation
-    public class Task { 
-        public string Name { get; set; } //naming the Task
-        public string Description { get; set; } //providing a brief description of the Task
-        public string Status { get; private set; } = "ToDo"; //initial Status is ToDo, it is protected (only accessible from within the class and derived classes)
-
-        public Task(string name, string description) //constructor part, to initialize a new task, hiding internal components of the Task => abstraction   
+namespace PMSCore.Tests
+{
+    /// <summary>
+    /// Unit tests for the <see cref="Project"/> class.
+    /// </summary>
+    public class ProjectTests
+    {
+        /// <summary>
+        /// Checks if the project is created with the right values.
+        /// </summary>
+        [Fact]
+        public void Constructor_ShouldInitializePropertiesCorrectly()
         {
-            Name = name; //setting the name for it
-            Description = description; //providing a description
+            // Arrange: Set up the details for a new project.
+            string name = "Test Project";
+            string description = "A sample project for testing.";
+            DateTime deadline = DateTime.Now.AddDays(10);
+
+            // Act: Create a project using the constructor.
+            var project = new Project(name, description, deadline);
+
+            // Assert: Verify that the project properties match the inputs.
+            Assert.Equal(name, project.Name);
+            Assert.Equal(description, project.Description);
+            Assert.Equal(deadline, project.Deadline);
+            Assert.Equal(ProjectStatus.NotStarted, project.Status);
         }
 
-        public void UpdateStatus(string newStatus) //method that updates a new value for this task => abstraction (status can't be changed directly)
+        /// <summary>
+        /// Checks if adding a task updates the task list and logs the action.
+        /// </summary>
+        [Fact]
+        public void AddTask_ShouldUpdateTaskListAndLog()
         {
-            if (newStatus == "ToDo" || newStatus == "In Progress" || newStatus == "Completed") //update status only if it matches one of these: "ToDo", "In Progress", "Completed"
-                Status = newStatus;
-        }
-    }
-    //class Project which is a group of tasks, also its attributes and methods are another example of Abstraction
-    public class Project { 
-        public string Name { get; set; } //attribute to give this project a name
-        public string Description { get; set; } //providing the project's description
-        public DateTime CreationDate { get; } = DateTime.Now; //creation date, according to the instructions that each project will have a timestamp of its creation
-        public DateTime Deadline { get; set; } //instructions state that the project needs to have a deadline in addition to a name and description
-        public List<Task> Tasks { get; } = new List<Task>(); //each project is supposed to have a list of tasks
+            // Arrange: Create a project and a task to add to it.
+            var project = new Project("Test Project", "A sample project.", DateTime.Now.AddDays(5));
+            var task = new Task();
 
-        public Project(string name, string description, DateTime deadline)
-        {
-            Name = name; //setting the name for the project
-            Description = description; //providing its description
-            Deadline = deadline; //deciding the deadline
+            // Act: Add the task to the project.
+            project.AddTask(task);
+
+            // Assert: Confirm the task is added to the list and logged correctly.
+            Assert.Single(project.Tasks);
+            Assert.Contains("Task added", project.GenerateReport());
         }
 
-        public void AddTask(Task task) => Tasks.Add(task); //adding a task to this project, this manages tasks => encapsulation, established the connection shown on the class diagram
-
-        public void DisplayDetails() //displaying the project details, an example of abstraction
+        /// <summary>
+        /// Checks if the action log is updated when a project is created.
+        /// </summary>
+        [Fact]
+        public void Constructor_ShouldUpdateActionLog()
         {
-            Console.WriteLine($"Project: {Name}, Description: {Description}, Created: {CreationDate}, Deadline: {Deadline}");
-            //going through each task and displaying details 
-            foreach (var task in Tasks)
-            {
-                Console.WriteLine($"Task: {task.Name}, Status: {task.Status}");
-            }
+            // Arrange: Prepare inputs for creating a new project.
+            string name = "Log Test Project";
+            string description = "Testing action log.";
+            DateTime deadline = DateTime.Now.AddDays(15);
+
+            // Act: Create a new project.
+            var project = new Project(name, description, deadline);
+
+            // Assert: Confirm the action log contains the creation entry.
+            Assert.Contains("Project created", project.GenerateReport());
+        }
+
+        /// <summary>
+        /// Ensures the DisplayDetails method runs without errors.
+        /// </summary>
+        [Fact]
+        public void DisplayDetails_ShouldPrintProjectDetails()
+        {
+            // Arrange: Create a project and add a task for testing the display.
+            var project = new Project("Display Test Project", "Testing display.", DateTime.Now.AddDays(20));
+            var task = new Task();
+            project.AddTask(task);
+
+            // Act: Call the DisplayDetails method to print details.
+            var exception = Record.Exception(() => project.DisplayDetails());
+
+            // Assert: Verify no exceptions occur during the method execution.
+            Assert.Null(exception);
         }
     }
 }

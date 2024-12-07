@@ -19,7 +19,12 @@ namespace PMSCore
         public DateTime Deadline { get; set; }
         public ProjectStatus Status { get; set; } = ProjectStatus.NotStarted;
         public List<Task> Tasks { get; } = new List<Task>();
-        private string actionLog = "";
+        private string report = "";
+
+        private void addToReport(string message)
+        {
+            report += $"[ActionLog] {DateTime.Now.ToString()} : {message}\n";
+        }
 
         /// <summary>
         /// Creates a project with a name, description, and deadline.
@@ -30,7 +35,7 @@ namespace PMSCore
             Description = description;
             CreationDate = DateTime.Now;
             Deadline = deadline;
-            actionLog += DateTime.Now + ": Project created.\n";
+            addToReport("Project created.");
         }
 
         /// <summary>
@@ -40,7 +45,7 @@ namespace PMSCore
         public void AddTask(Task task)
         {
             Tasks.Add(task);
-            actionLog += DateTime.Now + ": Task added.\n";
+            addToReport("Task added.");
         }
 
         /// <summary>
@@ -59,15 +64,9 @@ namespace PMSCore
         /// <summary>
         /// Generates a report of all actions performed on the project.
         /// </summary>
-        public void GenerateReport()
+        public string GenerateReport()
         {
-            Console.WriteLine("Action Log:");
-            Console.WriteLine(actionLog);
+            return report;
         }
     }
-
-    /// <summary>
-    /// Represents a task to be defined later.
-    /// </summary>
-    public class Task { }
 }

@@ -1,7 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using System.Reflection.Emit;
-
-namespace PMSCore
+﻿namespace PMSCore
 {
     /// <summary>
     /// Represents a user's access permission levels.

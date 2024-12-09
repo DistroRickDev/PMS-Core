@@ -10,7 +10,7 @@ namespace PMSCore
     /// <summary>
     /// Defines a contract for user management, including authentication and permissions.
     /// </summary>
-    public interface IUserInterface
+    public interface IUser
     {
         /// <summary>
         /// Retrieves the unique identifier for the user.

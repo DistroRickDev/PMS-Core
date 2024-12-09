@@ -1,6 +1,7 @@
 ﻿using System;
 using Xunit;
 using PMSCore;
+using static PMSCore.Permission;
 
 namespace PMSCore.Test
 {
@@ -13,47 +14,35 @@ namespace PMSCore.Test
         /// Tests that the default constructor initializes the object with default values.
         /// </summary>
         [Fact]
-        public void DefaultConstructor_ShouldInitializeWithDefaultValues()
+        public void DefaultConstructorShouldInitializeWithDefaultValues()
         {
             // Arrange & Act: Create an instance using the default constructor.
             var permission = new Permission();
 
             // Assert: Verify the default level and description values.
-            Assert.Equal(0, permission.PermissionLevel);
-            Assert.Equal("No permissions assigned.", permission.PermissionDescription);
+            Assert.Equal(Permission.PermissionLevel.DEFAULT, permission.GetPermissionLevel());
+            Assert.Equal("Default Permissions. No User Access.", permission.GetPermissionDescription());
         }
 
         /// <summary>
         /// Tests that the parameterized constructor initializes the object with the provided values.
         /// </summary>
         /// <param name="level">The permission level to initialize.</param>
-        /// <param name="description">The description to initialize.</param>
+        /// <param name="expectedDescription">The description expected from the permission level.</param>
         [Theory]
-        [InlineData(1, "Read-only access")]
-        [InlineData(5, "Full admin access")]
-        public void ParameterizedConstructor_ShouldInitializeWithProvidedValues(int level, string description)
+        [InlineData(1, "Basic User Permissions Applied.")]
+        [InlineData(2, "Employee Permissions Applied")]
+        [InlineData(3, "Managerial Permissions Applied.")]
+        [InlineData(4, "Administrative Permissions Applied.")]
+        [InlineData(5, "Full Permissions Applied.")]
+        public void ParameterizedConstructorShouldInitializeWithProvidedValues(int level, string expectedDescription)
         {
             // Arrange & Act: Create an instance using the parameterized constructor.
-            var permission = new Permission(level, description);
+            var permission = new Permission(level);
 
             // Assert: Verify that the level and description match the provided values.
-            Assert.Equal(level, permission.PermissionLevel);
-            Assert.Equal(description, permission.PermissionDescription);
-        }
-
-        /// <summary>
-        /// Tests that the parameterized constructor throws an exception for a negative permission level.
-        /// </summary>
-        [Fact]
-        public void ParameterizedConstructor_ShouldThrowArgumentExceptionForNegativeLevel()
-        {
-            // Arrange: Define invalid input values.
-            int invalidLevel = -1;
-            string description = "Invalid permission";
-
-            // Act & Assert: Verify that an ArgumentException is thrown with the correct message.
-            var exception = Assert.Throws<ArgumentException>(() => new Permission(invalidLevel, description));
-            Assert.Equal("Permission level must be a non-negative integer. (Parameter 'level')", exception.Message);
+            Assert.Equal(Enum.ToObject(typeof(PermissionLevel), level), permission.GetPermissionLevel());
+            Assert.Equal(expectedDescription, permission.GetPermissionDescription());
         }
 
         /// <summary>
@@ -63,12 +52,12 @@ namespace PMSCore.Test
         /// <param name="description">The permission description to test.</param>
         /// <param name="expected">The expected string representation.</param>
         [Theory]
-        [InlineData(1, "Read-only access", "Level 1: Read-only access")]
-        [InlineData(10, "Superuser access", "Level 10: Superuser access")]
-        public void ToString_ShouldReturnCorrectString(int level, string description, string expected)
-        {
+        [InlineData(Permission.PermissionLevel.USER, "Level 1: Basic User Permissions Applied.")]
+        [InlineData(Permission.PermissionLevel.SUPERUSER, "Level 5: Full Permissions Applied.")]
+        public void ToStringShouldReturnCorrectString(Permission.PermissionLevel level, string expected)
+        {        
             // Arrange: Create an instance using the parameterized constructor.
-            var permission = new Permission(level, description);
+            var permission = new Permission((int)level);
 
             // Act: Call the ToString method.
             var result = permission.ToString();

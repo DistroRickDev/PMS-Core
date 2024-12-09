@@ -1,51 +1,111 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Logging;
+using System.Reflection.Emit;
 
 namespace PMSCore
 {
-
     /// <summary>
-    /// Represents a user's permission with a level and description.
+    /// Represents a user's access permission levels.
+    /// Uses an enum representing the access permission level.
+    /// Uses a string to represent the access permission level's description.
     /// </summary>
     public class Permission
     {
         /// <summary>
-        /// Gets the level of the permission.
-        /// A higher value indicates more access or privileges.
-        /// </summary>
-        public int PermissionLevel { get; private set; }
+        /// Enum representing the different levels of user access.
+        /// Ranges from 0 (Default - No Access) to 5 (Superuser - Total Access).
+        /// <summary>
+        public enum PermissionLevel
+        {
+            DEFAULT = 0,
+            USER = 1,
+            EMPLOYEE = 2,
+            MANAGER = 3,
+            ADMIN = 4,
+            SUPERUSER = 5
+        }
 
         /// <summary>
-        /// Gets the description of the permission.
-        /// Provides additional context about what the permission level entails.
+        /// An array of strings describing the different permission levels. 
+        /// Applied to Permission on Construction based on access level.
         /// </summary>
-        public string PermissionDescription { get; private set; }
+        public readonly string[] PermissionDescriptions = 
+        { 
+                "Default Permissions. No User Access.",
+                "Basic User Permissions Applied.",
+                "Employee Permissions Applied",
+                "Managerial Permissions Applied.",
+                "Administrative Permissions Applied.",
+                "Full Permissions Applied."
+        };
+
+        /// <summary>
+        /// Declares the Permission variables, an enum from PermissionLevels and a PermissionDescription.
+        /// Variables set to private and readonly for encapsulation and security purposes.
+        /// <summary>
+        private readonly PermissionLevel Level;
+        private readonly string Description;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Permission"/> class with default values.
         /// </summary>
         public Permission()
         {
-            PermissionLevel = 0; // Default permission level
-            PermissionDescription = "No permissions assigned.";
+            this.Level = PermissionLevel.DEFAULT;
+            this.Description = PermissionDescriptions[0];
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Permission"/> class with specific values.
+        /// Initializes a new instance of the <see cref="Permission"/> class with input values.
         /// </summary>
-        /// <param name="level">The permission level. Must be non-negative.</param>
-        /// <param name="description">The description of the permission.</param>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="level"/> is negative.</exception>
-        public Permission(int level, string description)
+        /// <param name="Level">The permission level. Must be valid enum contained in PermissionLevels.</param>
+        public Permission(int level)
         {
-            if (level < 0)
-                throw new ArgumentException("Permission level must be a non-negative integer.", nameof(level));
+            try
+            {
+                // Check if the integer is a valid PermissionLevel
+                if (!Enum.IsDefined(typeof(PermissionLevel), level))
+                    throw new ArgumentOutOfRangeException(nameof(level), $"The value {level} is not a valid PermissionLevel.");
 
-            PermissionLevel = level;
-            PermissionDescription = description;
+                // Assign PermissionLevel.
+                this.Level = (PermissionLevel)level;
+
+                // Assign description value.
+                this.Description = PermissionDescriptions[level];
+
+                // Print permission values to console.
+                // TODO: Update to implement logging.
+                Console.WriteLine($"Permission created: {this}");
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                // Catch ArgumentOutOfRangeException and print to console.
+                // TODO: Update to use Logging.
+                Console.WriteLine(ex);
+            }
+            catch (Exception ex)
+            {
+                // Catch any other general exceptions and print to console.
+                // TODO: Update to use Logging.
+                Console.WriteLine(ex);
+            }   
+        }
+        
+        /// <summary>
+        /// Gets the name and level of the permission.
+        /// A higher value indicates more access or privileges.
+        /// </summary>
+        public PermissionLevel GetPermissionLevel()
+        {
+            return this.Level;
+        }
+
+        /// <summary>
+        /// Gets the description of the permission.
+        /// Provides additional context about what the permission level entails.
+        /// </summary>
+        public string GetPermissionDescription()
+        {
+            return this.Description;
         }
 
         /// <summary>
@@ -54,7 +114,7 @@ namespace PMSCore
         /// <returns>A string combining the permission level and description.</returns>
         public override string ToString()
         {
-            return $"Level {PermissionLevel}: {PermissionDescription}";
+            return $"Level {(int)Level}: {Description}";
         }
 
     }

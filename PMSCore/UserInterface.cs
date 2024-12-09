@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace PMSCore
+﻿namespace PMSCore
 {
     /// <summary>
     /// Defines a contract for user management, including authentication and permissions.

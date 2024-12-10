@@ -38,7 +38,7 @@ namespace PMSCore.Tests
         {
             // Arrange: Create a project and a task to add to it.
             var project = new Project("Test Project", "A sample project.", DateTime.Now.AddDays(5));
-            var task = new Task();
+            var task = new Task("task","desc",TaskPriority.High);
 
             // Act: Add the task to the project.
             project.AddTask(task);
@@ -74,7 +74,7 @@ namespace PMSCore.Tests
         {
             // Arrange: Create a project and add a task for testing the display.
             var project = new Project("Display Test Project", "Testing display.", DateTime.Now.AddDays(20));
-            var task = new Task();
+            var task = new Task("task", "desc", TaskPriority.High);
             project.AddTask(task);
 
             // Act: Call the DisplayDetails method to print details.

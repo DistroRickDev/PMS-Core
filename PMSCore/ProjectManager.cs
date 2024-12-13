@@ -5,19 +5,6 @@ namespace PMSCore;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Enum representing possible errors on association between User and Project
-/// </summary>
-public enum AssociationStatus
-{
-    NoError = 0,
-    InvalidUser,
-    InvalidProject,
-    DuplicatedProjectToUserAssociation,
-    UserNotFound,
-    ProjectNotFound,
-}
-
-/// <summary>
 /// Associative class that manages project per user and project lifeCycle
 /// </summary>
 public class ProjectManager

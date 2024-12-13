@@ -6,11 +6,11 @@ public class TaskManager
 {
     private TaskManager(ILogger? logger)
     {
-        _logger = logger ?? new LoggerFactory().CreateLogger("ProjectManager");
+        _logger = logger ?? new LoggerFactory().CreateLogger("TaskManager");
     }
 
     /// <summary>
-    /// Returns singleton instance for ProjectManager, creates a new instance if current on is null
+    /// Returns singleton instance for TaskManager, creates a new instance if current on is null
     /// </summary>
     /// <returns></returns>
     public static TaskManager GetInstance(ILogger? logger = null)
@@ -69,7 +69,7 @@ public class TaskManager
             }
         }
 
-        if (!string.IsNullOrEmpty(taskId))
+        if (string.IsNullOrEmpty(taskId))
         {
             _logger.LogError("TaskID cannot be null. Make sure TaskID is valid for trying to get association.");
             return AssociationStatus.InvalidTask;
@@ -151,18 +151,16 @@ public class TaskManager
     private bool ChangeTaskProperty(string? taskId, string? propertyValue, bool isName)
     {
         // TODO: Class StateHandler to change a Task property, StateHandler should validate currentUser and check for permission
-        if (!string.IsNullOrEmpty(taskId))
+        if (string.IsNullOrEmpty(taskId))
         {
-            return true;
+            _logger.LogError("TaskID cannot be null or empty.");
+            return false;  
         }
 
-        if (isName && string.IsNullOrEmpty(propertyValue))
-        {   
-            _logger.LogError("Task name cannot be null or empty.");
-            return false;
-        }
-        _logger.LogError("TaskID cannot be null or empty.");
-        return false;  
+        if (!isName || !string.IsNullOrEmpty(propertyValue)) return true;
+        
+        _logger.LogError("Task name cannot be null or empty.");
+        return false;
     }
 
     /// <summary>
@@ -174,6 +172,17 @@ public class TaskManager
     public bool ChangeTaskStatus(string? taskId, TaskStatus newStatus)
     {
         return ChangeTaskProperty(taskId, newStatus);
+    }
+    
+    /// <summary>
+    ///  Method that changes an existing Task status
+    /// </summary>
+    /// <param name="taskId"></param>
+    /// <param name="newPriority"></param>
+    /// <returns></returns>
+    public bool ChangeTaskPriority(string? taskId, TaskPriority newPriority)
+    {
+        return ChangeTaskProperty(taskId, newPriority);
     }
     
     /// <summary>

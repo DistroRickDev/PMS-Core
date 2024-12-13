@@ -44,5 +44,6 @@ namespace PMSCore
         /// A <see cref="Permission"/> object representing the user's permission.
         /// </returns>
         public Permission GetPermission();
+
     }
 }

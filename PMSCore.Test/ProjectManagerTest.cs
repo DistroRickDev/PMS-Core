@@ -17,7 +17,7 @@ namespace PMSCore.Test
         /// <summary>
         /// Test User mock used for unit tests
         /// </summary>
-        private static IUser TestUser { get; set; } = new UserMock();
+        private static IUser TestUser { get; set; } = new UserFake("TestUser");
 
         /// <summary>
         /// Tests Association of user to project happy path
@@ -164,7 +164,7 @@ namespace PMSCore.Test
             var pm = ProjectManager.GetInstance();
             var status = pm.AssociateProjectToUser(TestProject, TestUser);
             Assert.Equal(AssociationStatus.NoError, status);
-            IUser invalidUser = new UserMock();
+            IUser invalidUser = new UserFake("TestUser");
             status = pm.RemoveProjectFromUser(TestProject, invalidUser);
             Assert.Equal(AssociationStatus.UserNotFound, status);
         }

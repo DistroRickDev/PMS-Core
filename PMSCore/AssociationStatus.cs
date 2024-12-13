@@ -7,6 +7,7 @@ public enum AssociationStatus
 {
     NoError = 0,
     InvalidUser,
+    InvalidPermission,
     InvalidProject,
     InvalidTask,
     DuplicatedProjectToUserAssociation,

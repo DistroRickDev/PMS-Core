@@ -10,6 +10,9 @@
         EMPLOYEE = 2,
         MANAGER = 3,
         ADMIN = 4,
-        SUPERUSER = 5
+        SUPERUSER = 5,
+        TESTER = 6,
+        DEVELOPER = 7,
+        PROJECT_OWNER = 8
     }
 }

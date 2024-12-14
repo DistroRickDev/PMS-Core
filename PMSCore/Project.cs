@@ -1,72 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace PMSCore;
 
-namespace PMSCore
+/// <summary>
+/// A project with tasks and deadlines.
+/// </summary>
+public class Project : Entity
 {
     /// <summary>
-    /// Status of a project.
+    /// Creates a project with an id, description
     /// </summary>
-    public enum ProjectStatus { NotStarted, InProgress, Completed }
-
-    /// <summary>
-    /// A project with tasks and deadlines.
-    /// </summary>
-    public class Project
+    private Project(string id, string? description) : base(id, description)
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public DateTime CreationDate { get; }
-        public DateTime Deadline { get; set; }
-        public ProjectStatus Status { get; set; } = ProjectStatus.NotStarted;
-        public List<Task> Tasks { get; } = new List<Task>();
-        private string report = "";
-
-        private void addToReport(string message)
+        AppendMessageToReport($"Project: {id} created with description: {description ?? "No description"}");
+    }
+        
+    /// <summary>
+    ///  Project creator method
+    /// </summary>
+    /// <param name="callerLogger"></param>
+    /// <param name="id"></param>
+    /// <param name="description"></param>
+    /// <returns></returns>
+    public static Project? CreateProject(ILogger callerLogger, string? id, string? description = null)
+    {
+        if (!string.IsNullOrEmpty(id))
         {
-            report += $"[ActionLog] {DateTime.Now.ToString()} : {message}\n";
+            callerLogger.LogInformation($"Created Project with {id}, and description: {description ?? "No description"}");
+            return new Project(id, description);
         }
-
-        /// <summary>
-        /// Creates a project with a name, description, and deadline.
-        /// </summary>
-        public Project(string name, string description, DateTime deadline)
-        {
-            Name = name;
-            Description = description;
-            CreationDate = DateTime.Now;
-            Deadline = deadline;
-            addToReport("Project created.");
-        }
-
-        /// <summary>
-        /// Adds a task to the project.
-        /// </summary>
-        /// <param name="task">The task to add.</param>
-        public void AddTask(Task task)
-        {
-            Tasks.Add(task);
-            addToReport("Task added.");
-        }
-
-        /// <summary>
-        /// Displays project details and tasks.
-        /// </summary>
-        public void DisplayDetails()
-        {
-            Console.WriteLine("Project: " + Name + ", Description: " + Description + ", Created: " + CreationDate + ", Deadline: " + Deadline + ", Status: " + Status);
-            Console.WriteLine("Tasks:");
-            foreach (var task in Tasks)
-            {
-                Console.WriteLine("- Task details not available yet");
-            }
-        }
-
-        /// <summary>
-        /// Generates a report of all actions performed on the project.
-        /// </summary>
-        public string GenerateReport()
-        {
-            return report;
-        }
+        callerLogger.LogInformation("Failed to create project reason: empty id");
+        return null;
     }
 }

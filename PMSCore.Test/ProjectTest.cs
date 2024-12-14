@@ -1,87 +1,90 @@
-﻿using System;
-using Xunit;
-using PMSCore;
+﻿using Microsoft.Extensions.Logging;
+using PMSCore.Test;
 
-namespace PMSCore.Tests
+namespace PMSCore.Test
 {
     /// <summary>
     /// Unit tests for the <see cref="Project"/> class.
     /// </summary>
-    public class ProjectTests
+    public class ProjectTest
     {
+        private readonly ILogger _testLogger = new LoggerFake();
+
         /// <summary>
         /// Checks if the project is created with the right values.
         /// </summary>
         [Fact]
-        public void Constructor_ShouldInitializePropertiesCorrectly()
+        public void ProjectTest_ShouldInitializePropertiesCorrectly()
         {
             // Arrange: Set up the details for a new project.
-            string name = "Test Project";
+            string id = "Test Project";
             string description = "A sample project for testing.";
-            DateTime deadline = DateTime.Now.AddDays(10);
 
             // Act: Create a project using the constructor.
-            var project = new Project(name, description, deadline);
+            var project = Project.CreateProject(_testLogger, id, description);
 
             // Assert: Verify that the project properties match the inputs.
-            Assert.Equal(name, project.Name);
-            Assert.Equal(description, project.Description);
-            Assert.Equal(deadline, project.Deadline);
-            Assert.Equal(ProjectStatus.NotStarted, project.Status);
+            Assert.NotNull(project);
+            Assert.Equal(id, project!.GetId());
+            Assert.Equal(description, project!.GetDescription());
+            Assert.Equal(DateTime.Now.Date, project!.GetCreatedDate().Date);
         }
 
         /// <summary>
         /// Checks if adding a task updates the task list and logs the action.
         /// </summary>
         [Fact]
-        public void AddTask_ShouldUpdateTaskListAndLog()
+        public void ProjectTest_ShouldUpdatePropertiesCorrectly()
         {
             // Arrange: Create a project and a task to add to it.
-            var project = new Project("Test Project", "A sample project.", DateTime.Now.AddDays(5));
-            var task = new Task("task","desc",TaskPriority.High);
-
-            // Act: Add the task to the project.
-            project.AddTask(task);
-
-            // Assert: Confirm the task is added to the list and logged correctly.
-            Assert.Single(project.Tasks);
-            Assert.Contains("Task added", project.GenerateReport());
+            var project = Project.CreateProject(_testLogger, "Test Project", "description");
+            var expectedDate = DateTime.Now;
+            var expectedFinishedDate = DateTime.Today.AddDays(2);
+            Assert.NotNull(project);
+            project!.SetDescription("New Description");
+            project!.SetStatus(EntityStatus.Done);
+            project!.SetPriority(EntityPriority.Critical);
+            project!.SetStartedDate(expectedDate);
+            project!.SetFinishedDate(expectedFinishedDate);
+            Assert.Equal("New Description", project!.GetDescription());
+            Assert.Equal(EntityStatus.Done, project!.GetStatus());
+            Assert.Equal(EntityPriority.Critical, project!.GetPriority());
+            Assert.Equal(expectedDate, project!.GetStartedDate());
+            Assert.Equal(expectedFinishedDate, project!.GetFinishedDate());
         }
 
         /// <summary>
         /// Checks if the action log is updated when a project is created.
         /// </summary>
         [Fact]
-        public void Constructor_ShouldUpdateActionLog()
+        public void ProjectTest_ShouldUpdateActionLog()
         {
             // Arrange: Prepare inputs for creating a new project.
-            string name = "Log Test Project";
-            string description = "Testing action log.";
-            DateTime deadline = DateTime.Now.AddDays(15);
-
-            // Act: Create a new project.
-            var project = new Project(name, description, deadline);
-
-            // Assert: Confirm the action log contains the creation entry.
-            Assert.Contains("Project created", project.GenerateReport());
+            var project = Project.CreateProject(_testLogger, "Test Project", "description");
+            Assert.NotNull(project);
+            project!.SetDescription("New Description");
+            Assert.Contains("Changed description from 'description' to 'New Description'", project!.GetReport());
         }
 
         /// <summary>
         /// Ensures the DisplayDetails method runs without errors.
         /// </summary>
         [Fact]
-        public void DisplayDetails_ShouldPrintProjectDetails()
+        public void ProjectTest_ShouldPrintProjectDetails()
         {
-            // Arrange: Create a project and add a task for testing the display.
-            var project = new Project("Display Test Project", "Testing display.", DateTime.Now.AddDays(20));
-            var task = new Task("task", "desc", TaskPriority.High);
-            project.AddTask(task);
+            var project = Project.CreateProject(_testLogger, "Test Project", "description");
+            Assert.NotNull(project);
+            Assert.Contains(
+                $"Id: Test Project\nDescription: description\nPriority: {EntityPriority.Medium}\nStatus: {EntityStatus.New}",
+                project!.DisplayEntityDetails());
+        }
 
-            // Act: Call the DisplayDetails method to print details.
-            var exception = Record.Exception(() => project.DisplayDetails());
-
-            // Assert: Verify no exceptions occur during the method execution.
-            Assert.Null(exception);
+        [Fact]
+        public void ProjectTest_FailedToCreateProject()
+        {
+            var project = Project.CreateProject(_testLogger, null, "description");
+            Assert.Null(project);
+            Assert.Contains("Failed to create project reason: empty id", (_testLogger as LoggerFake)!.LogStream);
         }
     }
 }

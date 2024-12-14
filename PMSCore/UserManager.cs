@@ -44,7 +44,7 @@ namespace PMSCore
 
         public IUser SearchUsers(string targetUserID)
         {
-            foreach(IUser user in _RegisteredUsers)
+            foreach (IUser user in _RegisteredUsers)
             {
                 if (targetUserID.Equals(user.GetUserID()))
                 {
@@ -60,10 +60,7 @@ namespace PMSCore
         /// <param name="targetUserID">The ID of the target user whose permissions are being changed.</param>
         /// <param name="permission">The new permission level to assign.</param>
         /// <returns><c>true</c> if the permissions were changed successfully; otherwise, <c>false</c>.</returns>
-        public AssociationStatus ChangeUserPermission(string targetUserID, Permission permission)
-        {
-            // TODO: Class StateHandler to manage a User's permissions access.
-            // StateHandler should validate _currentUser and check for permission level before applying.
+        public AssociationStatus ChangeUserPermission(string targetUserID, Permission permission) {
 
             if ((targetUserID == null) || (_currentUser == null))
             {
@@ -88,8 +85,7 @@ namespace PMSCore
             }
 
             return AssociationStatus.UserNotFound;
-        }
-        
+       }
 
         /// <summary>
         /// Logs in the specified user if they are registered.
@@ -109,10 +105,8 @@ namespace PMSCore
                 else
                 {
                     return UserStatus.NotFound;
-
                 }
             }
-
             return UserStatus.Error;
         }
 
@@ -145,7 +139,7 @@ namespace PMSCore
                 return UserStatus.OK;
             }
 
-            else return UserStatus.NotFound;
+            return UserStatus.NotFound;
         }
 
         /// <summary>

@@ -94,6 +94,7 @@ namespace PMSCore.Tests
             UserManager.ResetInstance();
             var userManager = UserManager.GetInstance();
             var user = new UserFake("testUser", Permission.DEFAULT);
+            userManager.Register(user);
 
             // Act
             var result = userManager.Register(user);
@@ -184,6 +185,7 @@ namespace PMSCore.Tests
             Assert.Equal(UserStatus.OK, result);
         }
 
+
         [Fact]
         public void UserManagerTest_DeleteUser_ShouldFailIfUserNotRegistered()
         {
@@ -203,5 +205,5 @@ namespace PMSCore.Tests
             // Act
 
         }
-}
+    }
 }

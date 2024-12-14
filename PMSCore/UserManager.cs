@@ -42,65 +42,110 @@ namespace PMSCore
             _singleInstance = null;
         }
 
+        public IUser SearchUsers(string targetUserID)
+        {
+            foreach(IUser user in _RegisteredUsers)
+            {
+                if (targetUserID.Equals(user.GetUserID()))
+                {
+                    return user;
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Changes the permission level of a specified user.
         /// </summary>
-        /// <param name="currentUser">The current system user.</param>
-        /// <param name="targetUser">The user whose permissions are being changed.</param>
+        /// <param name="targetUserID">The ID of the target user whose permissions are being changed.</param>
         /// <param name="permission">The new permission level to assign.</param>
         /// <returns><c>true</c> if the permissions were changed successfully; otherwise, <c>false</c>.</returns>
-        public AssociationStatus ChangeUserPermission(IUser currentUser, IUser targetUser, Permission permission)
+        public AssociationStatus ChangeUserPermission(string targetUserID, Permission permission)
         {
             // TODO: Class StateHandler to manage a User's permissions access.
             // StateHandler should validate _currentUser and check for permission level before applying.
 
-            if ((targetUser == null) || (currentUser == null))
+            if ((targetUserID == null) || (_currentUser == null))
             {
                 _logger.LogError("UserID cannot be null or empty.");
                 return AssociationStatus.InvalidUser;
             }
-            else if (currentUser.GetPermission() >= Permission.ADMIN || currentUser.Equals(targetUser))
+
+            IUser targetUser = SearchUsers(targetUserID);
+
+            if (targetUser != null)
             {
-                targetUser.SetPermission(permission);
-                return AssociationStatus.NoError;
+                if (_currentUser.GetPermission() >= Permission.ADMIN || _currentUser.Equals(targetUser))
+                {
+                    targetUser.SetPermission(permission);
+                    return AssociationStatus.NoError;
+                }
+                else
+                {
+                    return AssociationStatus.InvalidPermission;
+                }
+
             }
 
-            return AssociationStatus.InvalidPermission;
+            return AssociationStatus.UserNotFound;
         }
+        
 
         /// <summary>
         /// Logs in the specified user if they are registered.
         /// </summary>
         /// <param name="loginUser">The user attempting to log in.</param>
-        /// <returns><see cref="AssociationStatus.NoError"/> if login is successful; otherwise, <see cref="AssociationStatus.InvalidUser"/>.</returns>
-        public AssociationStatus Login(IUser loginUser)
+        /// <returns><see cref="UserStatus.OK"/> if login is successful; otherwise if _RegisteredUser's does not contain user returns, <see cref="UserStatus.NotFound"/>. Else returns <see cref="UserStatus.Error"/></returns>
+        public UserStatus Login(IUser loginUser)
         {
             if (_currentUser == null)
             {
                 if (_RegisteredUsers.Contains(loginUser))
                 {
                     _currentUser = loginUser;
-                    return AssociationStatus.NoError;
+                    return UserStatus.OK;
+                }
+
+                else
+                {
+                    return UserStatus.NotFound;
+
                 }
             }
 
-            return AssociationStatus.InvalidUser;
-
+            return UserStatus.Error;
         }
 
         /// <summary>
         /// Registers a new user to the system if they are not already registered.
         /// </summary>
         /// <param name="newUser">The user to be registered.</param>
-        /// <returns><see cref="AssociationStatus.NoError"/> if registration is successful; otherwise, <see cref="AssociationStatus.InvalidUser"/>.</returns>
-        public AssociationStatus Register(IUser newUser)
+        /// <returns><see cref="UserStatus.OK"/> if registration is successful; otherwise, <see cref="UserStatus.Found"/>.</returns>
+        public UserStatus Register(IUser newUser)
         {
             if (!(_RegisteredUsers.Contains(newUser)))
             {
                 _RegisteredUsers.Add(newUser);
-                return AssociationStatus.NoError;
+                return UserStatus.OK;
             }
-            return AssociationStatus.InvalidUser;
+            return UserStatus.Found;
+        }
+
+        /// <summary>
+        /// Deletes a specific user from the _RegisteredUsers list. 
+        /// </summary>
+        /// <param name="targetUser">The user selected for deletion</param>
+        /// <returns><see cref="UserStatus.OK"/> if user deletion successful; otherwise, <see cref="UserStatus.NotFound"/> if the user does not exists.</returns>
+        public UserStatus DeleteUser(IUser targetUser)
+        {
+            // TODO: Update to tie in with StateManager.
+            if (_RegisteredUsers.Contains(targetUser))
+            {
+                _RegisteredUsers.Remove(targetUser);
+                return UserStatus.OK;
+            }
+
+            else return UserStatus.NotFound;
         }
 
         /// <summary>
@@ -111,17 +156,6 @@ namespace PMSCore
         public Permission GetUserPermissionLevel(IUser user)
         {
             return user.GetPermission();
-        }
-
-
-        public AssociationStatus AddUser(IUser user)
-        {
-            if (!(user == null) && !(_RegisteredUsers.Contains(user)))
-            {
-                this._RegisteredUsers.Add(user);
-                return AssociationStatus.NoError;
-            }
-            return AssociationStatus.InvalidUser;
         }
 
         /// <summary>

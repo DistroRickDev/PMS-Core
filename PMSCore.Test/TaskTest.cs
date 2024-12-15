@@ -1,78 +1,90 @@
-﻿namespace PMSCore;
+﻿using Microsoft.Extensions.Logging;
+using PMSCore.Test;
 
-public class TaskTest
+namespace PMSCore.Test
 {
-    [Fact]
-    public void ConstructorShouldCreateTaskWithValidParameters()
+    /// <summary>
+    /// Unit tests for the <see cref="Task"/> class.
+    /// </summary>
+    public class TaskTest
     {
-        // Using AAA pattern for arranging unit tests
-        
-        // Arrange - set up the testing objects
-        // Act - perform the action
-        // Assert - verify the result
+        private readonly ILogger _testLogger = new LoggerFake();
 
-        // Arrange
+        /// <summary>
+        /// Checks if the Task is created with the right values.
+        /// </summary>
+        [Fact]
+        public void TaskTest_ShouldInitializePropertiesCorrectly()
+        {
+            // Arrange: Set up the details for a new Task.
+            string id = "Test Task";
+            string description = "A sample Task for testing.";
 
-        var taskName = "Testing task";
-        var description = "A sample description";
-        var priority = TaskPriority.Low;
+            // Act: Create a Task using the constructor.
+            var task = Task.CreateTask(_testLogger, id, description);
 
-        // Act
-        var task1 = new Task(taskName, description, priority);
+            // Assert: Verify that the Task properties match the inputs.
+            Assert.NotNull(task);
+            Assert.Equal(id, task!.GetId());
+            Assert.Equal(description, task!.GetDescription());
+            Assert.Equal(DateTime.Now.Date, task!.GetCreatedDate().Date);
+        }
 
-        // Assert
-        Assert.Equal(taskName, task1.TaskName);
-        Assert.Equal(description, task1.Description);
-        Assert.Equal(priority, task1.Priority);
-        Assert.Equal(TaskStatus.New, task1.Status);
+        /// <summary>
+        /// Checks if adding a task updates the task list and logs the action.
+        /// </summary>
+        [Fact]
+        public void TaskTest_ShouldUpdatePropertiesCorrectly()
+        {
+            // Arrange: Create a Task and a task to add to it.
+            var task = Task.CreateTask(_testLogger, "Test Task", "description");
+            var expectedDate = DateTime.Now;
+            var expectedFinishedDate = DateTime.Today.AddDays(2);
+            Assert.NotNull(task);
+            task!.SetDescription("New Description");
+            task!.SetStatus(EntityStatus.Done);
+            task!.SetPriority(EntityPriority.Critical);
+            task!.SetStartedDate(expectedDate);
+            task!.SetFinishedDate(expectedFinishedDate);
+            Assert.Equal("New Description", task!.GetDescription());
+            Assert.Equal(EntityStatus.Done, task!.GetStatus());
+            Assert.Equal(EntityPriority.Critical, task!.GetPriority());
+            Assert.Equal(expectedDate, task!.GetStartedDate());
+            Assert.Equal(expectedFinishedDate, task!.GetFinishedDate());
+        }
 
+        /// <summary>
+        /// Checks if the action log is updated when a Task is created.
+        /// </summary>
+        [Fact]
+        public void TaskTest_ShouldUpdateActionLog()
+        {
+            // Arrange: Prepare inputs for creating a new Task.
+            var task = Task.CreateTask(_testLogger, "Test Task", "description");
+            Assert.NotNull(task);
+            task!.SetDescription("New Description");
+            Assert.Contains("Changed description from 'description' to 'New Description'", task!.GetReport());
+        }
+
+        /// <summary>
+        /// Ensures the DisplayDetails method runs without errors.
+        /// </summary>
+        [Fact]
+        public void TaskTest_ShouldPrintTaskDetails()
+        {
+            var task = Task.CreateTask(_testLogger, "Test Task", "description");
+            Assert.NotNull(task);
+            Assert.Contains(
+                $"Id: Test Task\nDescription: description\nPriority: {EntityPriority.Medium}\nStatus: {EntityStatus.New}",
+                task!.DisplayEntityDetails());
+        }
+
+        [Fact]
+        public void TaskTest_FailedToCreateTask()
+        {
+            var task = Task.CreateTask(_testLogger, null, "description");
+            Assert.Null(task);
+            Assert.Contains("Failed to create Task reason: empty id", (_testLogger as LoggerFake)!.LogStream);
+        }
     }
-
-    [Theory]
-    [InlineData(TaskStatus.New)]
-    [InlineData(TaskStatus.InProgress)]
-    [InlineData(TaskStatus.Completed)]
-    [InlineData(TaskStatus.Blocked)]
-    public void ChangeTaskStatus_ShouldChangeStatus(TaskStatus newStatus)
-    {
-        // Arrange
-        var task2 = new Task("Testing task 2", "Another description", TaskPriority.Medium);
-
-        // Act
-        task2.ChangeTaskStatus(newStatus);
-
-        // Assert
-        Assert.Equal(newStatus, task2.Status);
-
-    }
-
-    [Fact]
-    public void ActionRequired_ReturnsTrue_IfTaskNotComplete()
-    {
-        // Arrange
-        var task3 = new Task("Testing task 3", "Third description", TaskPriority.High);
-
-        // Act
-        var result = task3.ActionRequired();
-
-        // Assert
-        Assert.True(result);
-
-    }
-
-    [Fact]
-    public void ActionRequired_ReturnsFalse_IfTaskIsComplete()
-    {
-        // Arrange
-        var task4 = new Task("Testing task 4", "Fourth description", TaskPriority.Low);
-        task4.ChangeTaskStatus(TaskStatus.Completed);
-
-        // Act
-        var result = task4.ActionRequired();
-
-        // Assert
-        Assert.False(result);
-    }
-
-
 }

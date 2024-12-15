@@ -6,12 +6,9 @@ namespace PMSCore;
 public enum AssociationStatus
 {
     NoError = 0,
-    InvalidUser,
-    InvalidProject,
-    InvalidTask,
-    DuplicatedProjectToUserAssociation,
+    DuplicatedAssociation,
     UserNotFound,
-    TaskNotFound,
-    ProjectNotFound,
-    UnknownError,
+    EntityNotFound,
+    NoAssociation,
+    InvalidAssociation,
 }

@@ -1,5 +1,5 @@
 ## Team 6: Project Management System
-#### V0.1
+#### V0.8
 
 ------------
 
@@ -107,17 +107,41 @@ The following is the UML diagram settled on that the development could proceed.
 
 ------------
 
-During the development of the project, the UML Diagrams were updated to the following..
+During the development of the project, the UML Diagrams were updated to the following:
+
+![](https://webteic.info/images/PMScore-6-1.jpg)
+> Screenshot: UML Diagram enhancing the workflow with TaskManager.
+
+![](https://webteic.info/images/PMScore-6-2.jpg)
+> Screenshot: UML Diagram enhancing the workflow with ProjectManager.
+
+![](https://webteic.info/images/PMScore-6-3.jpg)
+> Screenshot: UML Diagram enhancing the workflow with UserManager.
 
 ## Classes
 
 The following outlines the key classes involved in the project:
 
 
-| Class Name: Users | Type: Inheritance |
+| Class: ProjectClass.cs | Type: Encapsulation & abstraction |
 |:----------------|:----------------------|
-| *Methods* | Info here |
-| *Details* | The user class is the superclass to the following subclasses of: Admin, ProductOwner, Developer & Tester. |
+| *Details* | **Encapsulation:** The report field and the addToReport method are private, ensuring controlled access to the internal data.<br/><br/> **Abstraction:** AddTask, DisplayDetails, and GenerateReport methods hide how tasks and reports are managed, focusing on functionality. |
+
+| Class: ReportManager.cs | Type: Encapsulation, abstraction & polymorphism |
+|:----------------|:----------------------|
+| *Details* | **Encapsulation:** The private fields _instance and _logger don't allow direct access, methods GetInstance and GenerateProjectReport are used to communicate with this class. <br/><br/> **Abstraction:** The GenerateProjectReport method simplifies interactions, hiding the complexities of logging and report generation. <br/><br/> **Polymorphism:** This class uses dependency injection with ILogger, which lets the class use different types of loggers. |
+
+| Class: Task.cs | Type: Encapsulation, abstraction & inheritance |
+|:----------------|:----------------------|
+| *Details* | **Encapsulation:** The properties ensure that task data is accessed and modified securely. <br/><br/> **Abstraction:** The class hides unnecessary implementation details. <br/><br/> **Inheritance:** This class is used as a base class for more specialized types of tasks. |
+
+| Class: Worker.cs | Type: Encapsulation, abstraction, inheritance & polymorphism |
+|:----------------|:----------------------|
+| *Details* | **Encapsulation:** The _logger field is private, preventing direct access and ensuring secure handling of logging. <br/><br/> **Abstraction:** The ExecuteAsync method simplifies background task execution by hiding the underlying implementation details. <br/><br/> **Inheritance:** The class inherits from BackgroundService, using its framework to handle background tasks. <br/><br/> **Polymorphism:** This class overrides the ExecuteAsync method to define specific behavior for this worker while maintaining the BackgroundService structure. |
+
+| Class: ProjectOwner.cs | Type: Encapsulation, abstraction, inheritance & polymorphism |
+|:----------------|:----------------------|
+| *Details* | **Encapsulation:** Sensitive information is kept private and can only be accessed through methods. <br/><br/> **Abstraction:** The shared actions, such as managing permissions, are defined in an abstract class. <br/><br/> **Inheritance:** ProjectOwner inherits from its base class and shares the same properties with other types of users. <br/><br/> **Polymorphism:** The AssignTask method is overridden to implement behavior customized to project-specific needs.|
 
 ## Implementation Decisions
 
@@ -126,17 +150,34 @@ The team worked with the GitHub task management system for managing the workload
 ![](https://webteic.info/images/PMScore-7.jpg)
 > Screenshot: Team development workload.
 
-Details here of how the system works in the final version.
+The tasks were agreed with each person on the team & setup of the kanban board proceeded with column limits to ensure a smooth process.
 
-- Key implementation decision 1
-- Key implementation decision 2
-- Key implementation decision 3
-- Key implementation decision 4
+During the development we would do unit tests at the same time of developing each task, a continuous cycle to reduce the number of potential bugs that could appear later on.
+
+Branches would be used with GitHub for each persons changes before being merged later into the master.
+
+The team encountered a major bottleneck later in the project lifecycle and the original scope needed to be reshaped. During a few team meetings, we decided to reduce the number of tasks and combine certain processes. This would enhance the project while also making more attainable to achieve the goals set out. 
+
+UML Diagrams were updated to account for this with the User -> TaskManager, ProjectManager & UserManager -> with the improved StateManager. This streamlined the structure of the project and was one of the most vital implementation decisions made.
+
+The bottlenecks were also removed with the team effort on additional reviewing & fixing, as well removing unnecessary tasks no longer needed with the improved structure. 
+
+![](https://webteic.info/images/PMScore-7-1.jpg)
+> Screenshot: Team development workload improvements.
+
+During team meetings, everyone had their voice to address any issues and the team began to gel as one unit to reach the goals set out. Each person showed their own leadership abilities, support & working as one to deliver the project.
 
 ###  Testing
 
-Details here
+Rigorous testing (unit tests) was done from the outset with each task & classes. While this did slow down the overall development, it was better this way to allow a cleaner codebase that was not riddled with bugs.
 
-## Implementation Decisions
+The code base was enhanced with additional comments to layout a clear structure for each file & class.
+
+![](https://webteic.info/images/PMScore-7-2.jpg)
+> Screenshot: Unit Testing structure.
+
+Various issues were found during the tests and were corrected, including refinements along the way. When a pull request was sent, another team member would jump in to review this pull request as a rule until the task & testing was complete.
+
+## Deployment Instructions
 
 Details here

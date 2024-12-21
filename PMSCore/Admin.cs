@@ -1,15 +1,18 @@
-﻿namespace PMSCore;
+﻿using System.Text.Json.Serialization;
+
+namespace PMSCore;
 
 /// <summary>
 /// Represents an Admin user with the highest level of access and permissions.
 /// </summary>
+[JsonConverter(typeof(UserJsonConverter))]
 public class Admin : User
 {
     /// <summary>
     /// Initializes an Admin with all permissions.
     /// </summary>
     public Admin(string userId)
-        : base(userId, new HashSet<Permission>
+        : base(UserType.Admin, userId, new HashSet<Permission>
         {
             Permission.CanCreateProject,
             Permission.CanChangeProjectProperty,

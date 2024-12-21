@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace PMSCore;
 
 /// <summary>
@@ -7,11 +9,9 @@ public class StateManager
 {
     private StateManager(ILogger? logger)
     {
-        _logger = logger ?? new LoggerFactory().CreateLogger("StateManager");
-        _users = new();
-        _entities = new();
-        _userToEntityAssociation = new();
-        _entityToEntityAssociation = new();
+        SetPersistencePath();
+        _logger = logger ?? LoggerFactory.Create(builder => builder.AddProvider(new PmsLoggerProvider(Path.Combine(PersistencePath!, "PMSCore-StateManager.log")))).CreateLogger("StateManager");
+        LoadFromPersistence();
         _report = string.Empty;
     }
 
@@ -21,7 +21,7 @@ public class StateManager
     /// <returns></returns>
     public static StateManager GetInstance(ILogger? logger = null)
     {
-        lock(_createLock)
+        lock (_createLock)
         {
             if (_singleInstance == null)
             {
@@ -441,7 +441,7 @@ public class StateManager
             return AssociationStatus.EntityNotFound;
         }
 
-        if (_entities[entityA] is Project && _entities[entityB] is Task)
+        if (_entities![entityA] is Project && _entities[entityB] is Task)
         {
             return DisassociateEntities(_entities[entityA], _entities[entityB]);
         }
@@ -455,14 +455,76 @@ public class StateManager
         return AssociationStatus.InvalidAssociation;
     }
 
+    private void SetPersistencePath()
+    {
+        PersistencePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PMSCore");
+        if (!Directory.Exists(PersistencePath))
+        {
+            Directory.CreateDirectory(PersistencePath);
+        }
+    }
+    
+    private T? DeserializeObjects<T>(string path, T? objectToDeserialize)
+    {
+        if (!File.Exists(path))
+        {
+            _logger.LogError($"File {path} does not exist");
+            return default;
+        }
+        
+        var json = File.ReadAllText(path);
+        if (string.IsNullOrEmpty(json))
+        {
+            _logger.LogError($"File {path} dis empty");
+            return default;
+        }
+        objectToDeserialize = JsonSerializer.Deserialize<T>(json);
+        if (objectToDeserialize == null)
+        {
+            _logger.LogError($"{path} file not found or failed to load from persistence");
+            return default;
+        }
+
+        return objectToDeserialize;
+    }
+
+    private void LoadFromPersistence()
+    {
+        _entities = DeserializeObjects(Path.Combine(PersistencePath, "entities.json"), _entities) ?? new();
+        _users = DeserializeObjects(Path.Combine(PersistencePath, "users.json"), _users) ?? new();
+        _entityToEntityAssociation =
+            DeserializeObjects(Path.Combine(PersistencePath, "entityToEntity.json"), _entityToEntityAssociation) ??
+            new();
+        _userToEntityAssociation =
+            DeserializeObjects(Path.Combine(PersistencePath, "userToEntity.json"), _userToEntityAssociation) ?? new();
+        FileRead = true;
+    }
+
+    public async Task<bool> StoreToPersistence()
+    {
+        var options = new JsonSerializerOptions();
+        options.WriteIndented = true;
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "entities.json"),
+            JsonSerializer.Serialize(_entities, options));
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "users.json"),
+            JsonSerializer.Serialize(_users, options));
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "entityToEntity.json"),
+            JsonSerializer.Serialize(_entityToEntityAssociation, options));
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "userToEntity.json"),
+            JsonSerializer.Serialize(_userToEntityAssociation, options));
+        return true;
+    }
+
     private static StateManager? _singleInstance;
     private static ILogger _logger;
-    private static Dictionary<string, IUser> _users;
-    private static Dictionary<string, Entity> _entities;
-    private static Dictionary<string, HashSet<Entity>> _userToEntityAssociation;
-    private static Dictionary<string, HashSet<Entity>> _entityToEntityAssociation;
+    private static Dictionary<string, IUser>? _users;
+    private static Dictionary<string, Entity>? _entities;
+    private static Dictionary<string, HashSet<Entity>>? _userToEntityAssociation;
+    private static Dictionary<string, HashSet<Entity>>? _entityToEntityAssociation;
     private static IUser? _currentUser;
     private static string _report;
     private static readonly object _createLock = new();
-    private readonly string DataStoragePath = "Data.json";
+    private string PersistencePath { get; set; }
+    public bool FileRead { get; private set; } = true;
 }

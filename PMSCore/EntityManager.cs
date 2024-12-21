@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace PMSCore;
 
 /// <summary>
@@ -9,7 +7,11 @@ public class EntityManager
 {
     private EntityManager(ILogger? logger)
     {
-        _logger = logger ?? new LoggerFactory().CreateLogger("TaskManager");
+        SetLoggerPath();
+        _logger = logger ?? LoggerFactory
+            .Create(builder =>
+                builder.AddProvider(new PmsLoggerProvider(Path.Combine(LoggerPath!, "PMSCore-EntityManager.log"))))
+            .CreateLogger("EntityManager");
     }
 
     /// <summary>
@@ -49,13 +51,18 @@ public class EntityManager
     /// <returns>EntityState</returns>
     public EntityState CreateEntity(string id, string? description, EntityType entityType)
     {
+        _logger.LogInformation(
+            $"Attempting to create entity with {id}, with description {description} of type {entityType}");
         if (entityType == EntityType.Project)
         {
+            _logger.LogInformation($"Entity is Project");
             return StateManager.GetInstance().CreateEntity(Project.CreateProject(_logger, id, description)!);
         }
+
+        _logger.LogInformation($"Entity is Task");
         return StateManager.GetInstance().CreateEntity(Task.CreateTask(_logger, id, description)!);
     }
-    
+
     /// <summary>
     /// Removes a given entity
     /// </summary>
@@ -243,7 +250,18 @@ public class EntityManager
         return StateManager.GetInstance().DisassociateUserToEntity(entityA, entityB);
     }
 
+    private void SetLoggerPath()
+    {
+        LoggerPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PMSCore");
+        if (!Directory.Exists(LoggerPath))
+        {
+            Directory.CreateDirectory(LoggerPath);
+        }
+    }
+
     private static EntityManager? _singleInstance;
     private readonly ILogger _logger;
     private static readonly object _createLock = new();
+    private string LoggerPath { get; set; } = String.Empty;
 }

@@ -284,6 +284,70 @@ public class StateManager
     }
 
     /// <summary>
+    /// Updates a user property (userId | Permission)
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="property"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public EntityState UpdateUserProperty(string userId, UserProperty property, object value)
+    {
+        if (!_users.ContainsKey(userId))
+        {
+            _logger.LogError($"User {userId} does not exist");
+            return EntityState.NotFound;
+        }
+
+        switch (property)
+        {
+            case UserProperty.ChangeUserId:
+                if (value is not string)
+                {
+                    _logger.LogError($"Cannot update entity property {property} because value is not a string");
+                    return EntityState.Forbidden;
+                }
+                return _users[userId].ChangeUserId((string)value) == UserOperationResult.Ok ? EntityState.Ok : EntityState.Forbidden;
+            
+            case UserProperty.AddPermissions or UserProperty.RemovePermissions:
+                if (value is not Permission permission)
+                {
+                    _logger.LogError($"Cannot update entity property {property} because value is not a Permission");
+                    return EntityState.Forbidden;
+                }
+
+                var removeUserPermission = property == UserProperty.AddPermissions ?  _users[userId].AddUserPermission(permission) : _users[userId].RemoveUserPermission(permission);
+                return removeUserPermission == UserOperationResult.Ok ? EntityState.Ok : EntityState.Forbidden;
+        }
+        return EntityState.Forbidden;
+    }
+
+    /// <summary>
+    /// Returns a summary of user associations
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public (EntityState, string?) GetUserAssociations(string userId)
+    {
+        if (!_users.ContainsKey(userId))
+        {
+            _logger.LogError($"User {userId} does not exist");
+            return (EntityState.NotFound, null);
+        }
+
+        if (!_userToEntityAssociation.ContainsKey(userId))
+        {
+            _logger.LogError($"User {userId} does not have associations");
+            return (EntityState.NotFound, null);
+        }
+        string associationDetails = string.Empty;
+        foreach (var entity in _userToEntityAssociation[userId])
+        {
+            associationDetails += $"[{userId} is associated with {entity.GetId()}\n";
+        }
+        return (EntityState.Ok, associationDetails);
+    }
+
+    /// <summary>
     /// Associates User to Entity
     /// </summary>
     /// <param name="entityId"></param>

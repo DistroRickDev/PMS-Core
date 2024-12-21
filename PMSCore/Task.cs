@@ -1,11 +1,21 @@
-﻿namespace PMSCore;
+﻿using System.Text.Json.Serialization;
 
+namespace PMSCore;
+
+[JsonConverter(typeof(EntityJsonConverter))]
 public class Task : Entity
 {
+    [JsonConstructor]
+    public Task(string id, string? description, EntityStatus status, EntityPriority priority,
+        DateTime createdDate, DateTime? startedDate = null, DateTime? finishedDate = null) : base(EntityType.Task, id,
+        description, status, priority, createdDate, startedDate, finishedDate)
+    {
+    }
+    
     /// <summary>
     /// Creates a Task with an id, description
     /// </summary>
-    private Task(string id, string? description) : base(id, description)
+    private Task(string id, string? description) : base(EntityType.Task, id, description)
     {
         AppendMessageToReport($"Task: {id} created with description: {description ?? "No description"}");
     }

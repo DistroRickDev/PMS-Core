@@ -1,0 +1,11 @@
+@startuml
+class PmsLogger {
+    + PmsLogger(handler:string, loggerBuffer:StreamWriter)
+    + BeginScope(state:TState) : IDisposable
+    + IsEnabled(logLevel:LogLevel) : bool
+    + Log(logLevel:LogLevel, eventId:EventId, state:TState, exception:Exception, formatter:Func<TState, Exception, string>) : void
+    - <<readonly>> _handler : string
+    - <<readonly>> _loggerBuffer : StreamWriter
+}
+ILogger <|-- PmsLogger
+@enduml

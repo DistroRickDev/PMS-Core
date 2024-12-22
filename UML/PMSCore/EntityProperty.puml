@@ -1,0 +1,11 @@
+@startuml
+enum EntityProperty {
+    Description= 0,
+    EntityStatus,
+    EntityPriority,
+    CreatedDate,
+    StartedDate,
+    FinishedDate,
+    Report,
+}
+@enduml

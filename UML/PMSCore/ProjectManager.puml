@@ -1,0 +1,6 @@
+@startuml
+class ProjectManager {
+    + ProjectManager(userId:string)
+}
+User <|-- ProjectManager
+@enduml

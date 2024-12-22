@@ -1,0 +1,7 @@
+@startuml
+class EntityJsonConverter {
+    + <<override>> Read(reader:Utf8JsonReader, typeToConvert:Type, options:JsonSerializerOptions) : Entity?
+    + <<override>> Write(writer:Utf8JsonWriter, entity:Entity, options:JsonSerializerOptions) : void
+}
+"JsonConverter`1" "<Entity>" <|-- EntityJsonConverter
+@enduml

@@ -1,0 +1,6 @@
+@startuml
+enum UserOperationResult {
+    Ok,
+    Failed,
+}
+@enduml

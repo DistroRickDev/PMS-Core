@@ -1,0 +1,10 @@
+@startuml
+enum AssociationStatus {
+    NoError= 0,
+    DuplicatedAssociation,
+    UserNotFound,
+    EntityNotFound,
+    NoAssociation,
+    InvalidAssociation,
+}
+@enduml

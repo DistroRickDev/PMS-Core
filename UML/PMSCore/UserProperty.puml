@@ -1,0 +1,7 @@
+@startuml
+enum UserProperty {
+    AddPermissions,
+    RemovePermissions,
+    ChangeUserId,
+}
+@enduml

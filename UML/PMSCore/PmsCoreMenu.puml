@@ -1,0 +1,24 @@
+@startuml
+class PmsCoreMenu <<static>> {
+    {static} - PmsCoreMenu()
+    - {static} GetIdFromInput(displayMessage:string) : string?
+    - {static} MenuHeader(title:string) : void
+    + {static} StartMenu() : void
+    - {static} LogInMenu() : void
+    - {static} RemoveUserMenuItem() : void
+    - {static} AddRemoveUserPermission(removePermission:bool) : void
+    - {static} GenerateUserReport() : void
+    - {static} UserManagementMenu() : void
+    - {static} AddRemoveEntity(entityType:EntityType, removeEntity:bool) : void
+    - {static} ChangeEntityProperty(entityType:EntityType) : void
+    - {static} AssociateDisassociateToEntity(entityType:EntityType, disassociate:bool) : void
+    - {static} AssociateDisassociateEntityToEntity(entityType:EntityType, disassociate:bool) : void
+    - {static} EntityManagementMenu(entityType:EntityType) : void
+    - {static} MainMenu() : void
+    - {static} RegisterMenu() : void
+    - {static} CreateUserFromInput(userId:string) : IUser?
+    - {static} OnExit() : void
+    - {static} ShutDownEventHandler(sender:object, args:ConsoleCancelEventArgs) : void
+    - {static} Header : string <<get>> = "#### PMS Core! ####"
+}
+@enduml

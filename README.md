@@ -1,5 +1,5 @@
 ## Team 6: Project Management System
-#### V0.8
+#### V1.0
 
 ------------
 
@@ -83,65 +83,89 @@ Researching the needs & objectives further, the team broke this down into key hi
 - A system capable of allocating and deallocating users to projects and tasks
 - A system capable of Role-based access
 
-This led to enhancing the UML Diagrams. 
+This led to enhancing the UML Diagrams.
 
-![](https://webteic.info/images/PMScore-3.jpg)
-> Screenshot: UML Diagram 2 - redefined
+![Admin.svg](UML/PMSCore/Admin.svg)
+> Screenshot: Admin class diagram
 
-------------
+![AssociationStatus.svg](UML/PMSCore/AssociationStatus.svg)
+> Screenshot: AssociationStatus enum class diagram
 
-![](https://webteic.info/images/PMScore-4.jpg)
-> Screenshot: UML Diagram 3 - working out next steps in details
+![AssociationType.svg](UML/PMSCore/AssociationType.svg)
+> Screenshot: AssociationType enum class diagram
 
-------------
+![Developer.svg](UML/PMSCore/Developer.svg)
+> Screenshot: Developer class diagram
 
-![](https://webteic.info/images/PMScore-5.jpg)
-> Screenshot: UML Diagram 4 - further redefinement
+![Entity.svg](UML/PMSCore/Entity.svg)
+> Screenshot: Entity abstract class diagram
 
-------------
+![EntityJsonConverter.svg](UML/PMSCore/EntityJsonConverter.svg)
+> Screenshot: EntityJsonConverter class diagram
 
-The following is the UML diagram settled on that the development could proceed.
+![EntityPriority.svg](UML/PMSCore/EntityPriority.svg)
+> Screenshot: EntityPriority enum class diagram
 
-![](https://webteic.info/images/PMScore-6.jpg)
-> Screenshot: UML Diagram for the project agreed & development begins.
+![EntityProperty.svg](UML/PMSCore/EntityProperty.svg)
+> Screenshot: EntityProperty enum class diagram
 
-------------
+![EntityState.svg](UML/PMSCore/EntityState.svg)
+> Screenshot: EntityState enum class diagram
 
-During the development of the project, the UML Diagrams were updated to the following:
+![EntityStatus.svg](UML/PMSCore/EntityStatus.svg)
+> Screenshot: EntityStatus enum class diagram
 
-![](https://webteic.info/images/PMScore-6-1.jpg)
-> Screenshot: UML Diagram enhancing the workflow with TaskManager.
+![EntityType.svg](UML/PMSCore/EntityType.svg)
+> Screenshot: EntityType enum class diagram
 
-![](https://webteic.info/images/PMScore-6-2.jpg)
-> Screenshot: UML Diagram enhancing the workflow with ProjectManager.
+![IUser.svg](UML/PMSCore/IUser.svg)
+> Screenshot: IUser interface class diagram
 
-![](https://webteic.info/images/PMScore-6-3.jpg)
-> Screenshot: UML Diagram enhancing the workflow with UserManager.
+![Permission.svg](UML/PMSCore/Permission.svg)
+> Screenshot: Permission enum class diagram
 
-## Classes
+![PmsCoreMenu.svg](UML/PMSCore/PmsCoreMenu.svg)
+> Screenshot: PmsCoreMenu class diagram
 
-The following outlines the key classes involved in the project:
+![PmsLogger.svg](UML/PMSCore/PmsLogger.svg)
+> Screenshot: PmsLogger class diagram
 
+![PmsLoggerProvider.svg](UML/PMSCore/PmsLoggerProvider.svg)
+> Screenshot: PmsLoggerProvider class diagram
 
-| Class: ProjectClass.cs | Type: Encapsulation & abstraction |
-|:----------------|:----------------------|
-| *Details* | **Encapsulation:** The report field and the addToReport method are private, ensuring controlled access to the internal data.<br/><br/> **Abstraction:** AddTask, DisplayDetails, and GenerateReport methods hide how tasks and reports are managed, focusing on functionality. |
+![Program.svg](UML/PMSCore/Program.svg)
+> Screenshot: Program main class diagram
 
-| Class: ReportManager.cs | Type: Encapsulation, abstraction & polymorphism |
-|:----------------|:----------------------|
-| *Details* | **Encapsulation:** The private fields _instance and _logger don't allow direct access, methods GetInstance and GenerateProjectReport are used to communicate with this class. <br/><br/> **Abstraction:** The GenerateProjectReport method simplifies interactions, hiding the complexities of logging and report generation. <br/><br/> **Polymorphism:** This class uses dependency injection with ILogger, which lets the class use different types of loggers. |
+![Project.svg](UML/PMSCore/Project.svg)
+> Screenshot: Project class diagram
 
-| Class: Task.cs | Type: Encapsulation, abstraction & inheritance |
-|:----------------|:----------------------|
-| *Details* | **Encapsulation:** The properties ensure that task data is accessed and modified securely. <br/><br/> **Abstraction:** The class hides unnecessary implementation details. <br/><br/> **Inheritance:** This class is used as a base class for more specialized types of tasks. |
+![ProjectManager.svg](UML/PMSCore/ProjectManager.svg)
+> Screenshot: ProjectManager class diagram
 
-| Class: Worker.cs | Type: Encapsulation, abstraction, inheritance & polymorphism |
-|:----------------|:----------------------|
-| *Details* | **Encapsulation:** The _logger field is private, preventing direct access and ensuring secure handling of logging. <br/><br/> **Abstraction:** The ExecuteAsync method simplifies background task execution by hiding the underlying implementation details. <br/><br/> **Inheritance:** The class inherits from BackgroundService, using its framework to handle background tasks. <br/><br/> **Polymorphism:** This class overrides the ExecuteAsync method to define specific behavior for this worker while maintaining the BackgroundService structure. |
+![StateManager.svg](UML/PMSCore/StateManager.svg)
+> Screenshot: StateManager class diagram
 
-| Class: ProjectOwner.cs | Type: Encapsulation, abstraction, inheritance & polymorphism |
-|:----------------|:----------------------|
-| *Details* | **Encapsulation:** Sensitive information is kept private and can only be accessed through methods. <br/><br/> **Abstraction:** The shared actions, such as managing permissions, are defined in an abstract class. <br/><br/> **Inheritance:** ProjectOwner inherits from its base class and shares the same properties with other types of users. <br/><br/> **Polymorphism:** The AssignTask method is overridden to implement behavior customized to project-specific needs.|
+![Task.svg](UML/PMSCore/Task.svg)
+> Screenshot: Task class diagram
+
+![Tester.svg](UML/PMSCore/Tester.svg)
+> Screenshot: Tester class diagram
+
+![User.svg](UML/PMSCore/User.svg)
+> Screenshot: User abstract class diagram
+
+![UserJsonConverter.svg](UML/PMSCore/UserJsonConverter.svg)
+> Screenshot: UserJsonConverter class diagram
+
+![UserOperationResult.svg](UML/PMSCore/UserOperationResult.svg)
+> Screenshot: UserOperationResult enum class diagram
+
+![UserProperty.svg](UML/PMSCore/UserProperty.svg)
+> Screenshot: UserProperty enum class diagram
+
+![UserType.svg](UML/PMSCore/UserType.svg)
+> Screenshot: UserType enum class diagram
+
 
 ## Implementation Decisions
 
@@ -156,11 +180,15 @@ During the development we would do unit tests at the same time of developing eac
 
 Branches would be used with GitHub for each persons changes before being merged later into the master.
 
+In the Core Architecture description we applied all 4 pillars of the OOP of Encapsulation, Inheritance, Polymorphism & Abstraction for the project.
+
 The team encountered a major bottleneck later in the project lifecycle and the original scope needed to be reshaped. During a few team meetings, we decided to reduce the number of tasks and combine certain processes. This would enhance the project while also making more attainable to achieve the goals set out. 
 
 UML Diagrams were updated to account for this with the User -> TaskManager, ProjectManager & UserManager -> with the improved StateManager. This streamlined the structure of the project and was one of the most vital implementation decisions made.
 
-The bottlenecks were also removed with the team effort on additional reviewing & fixing, as well removing unnecessary tasks no longer needed with the improved structure. 
+The bottlenecks were also removed with the team effort on additional reviewing & fixing, as well removing unnecessary tasks no longer needed with the improved structure.
+
+JSON is used to handle the data involved.
 
 ![](https://webteic.info/images/PMScore-7-1.jpg)
 > Screenshot: Team development workload improvements.
@@ -173,11 +201,187 @@ Rigorous testing (unit tests) was done from the outset with each task & classes.
 
 The code base was enhanced with additional comments to layout a clear structure for each file & class.
 
-![](https://webteic.info/images/PMScore-7-2.jpg)
+![](Docs/UnitTestStructure.png)
 > Screenshot: Unit Testing structure.
 
 Various issues were found during the tests and were corrected, including refinements along the way. When a pull request was sent, another team member would jump in to review this pull request as a rule until the task & testing was complete.
 
+Admin, Developer, ProjectManager, and Tester roles all had their unit tests applied, validating the permissions off the different user roles, the actions each user role can do and to ensure functionality works as expected.
+
+xUnit testing tool for the .NET Framework was used with the Arrange-Act-Assert pattern.
+
+### Unit Test Coverage
+![](Docs/UnitTestCoverage.png)
+> Screenshot: Unit Testing coverage.
+
 ## Deployment Instructions
 
-Details here
+The following outlines the instructions to deploy the program:
+
+1. **Cloning the Repository:**
+
+Open Visual Studio 2022 and navigate to View - Terminal.
+
+Provided you have a terminal such as PowerShell, Command Prompt or Git Bash, open it and run the following command:
+
+git clone https://github.com/DistroRickDev/PMS-Core.git
+cd PMS-Core
+
+2. **Restoring Dependencies:**
+
+Run the following command:
+
+dotnet restore
+
+3. **Building the Solution:**
+
+Use Build - Build Solution in Visual studio or this command:
+
+dotnet build
+
+4. **Running the project:**
+
+Go to the project in Solution Explorer, use the command:
+
+dotnet run
+
+Alternatively, use F5 to run.
+
+5. **Running Unit Tests:**
+
+Run the command:
+
+dotnet test
+
+6. **Publishing the project:**
+
+Change to Release section and publish by selecting Build - Publish Selection
+
+Alternatively, run:
+
+dotnet publish --configuration Release
+
+7. **Validate Deployment:**
+
+Validated that everything is functional.
+
+## How to use:
+
+1. ** Run Program **
+
+ ``` shell
+   cd PMSCore
+   dotnet run
+ ```
+2. ** Start Up Menu **
+
+``` text
+#### PMS Core! ####
+
+Start-Up Menu:
+
+Please select an option:
+
+1) Login
+2) Register
+3) Exit
+```
+- If option entered is 1) a userId must be provided if no user is found in register the user 
+is set to Start Up Menu else it moves to MainMenu
+- If option entered is 2) a userId must be provided and user type (Admin|Developer|ProjectManager|Tester)
+if the userId is found in register is set to Start Up Menu else it moves to MainMenu
+
+3. **MainMenu**
+
+```text
+#### PMS Core! ####
+
+User Menu, welcome [USERID]:
+
+Please select an option:
+
+1) User Management
+2) Project Management
+3) Task Management
+4) LogOff
+5) Exit
+```
+
+- Option 1) will display User Management Menu
+- Option 2) will display Project Management Menu
+- Option 3) will display Task Management Menu
+- Option 4) log off the current user and move to Main Menu
+- Option 5) will gracefully close the application (default)
+
+4. **UserManager**
+
+```text
+#### PMS Core! ####
+
+User Management Menu, [USERID]:
+
+Please select an option:
+
+1) Remove User
+2) Add User Permission
+3) Remove User Permission
+4) Generate User Report
+5) Back to Main Menu
+6) Exit
+```
+
+- Option 1) 2) 3) 4) require specific user permissions from current user
+- Option 5) returns to previous menu
+- Option 6) will gracefully close the application (default)
+
+5. **Project Management**
+
+```text
+#### PMS Core! ####
+
+Project Menu [USERID]:
+
+Please select an option:
+
+1) Add Project
+2) Remove Project
+3) Change Project property
+4) Associate User to Project
+5) Disassociate User from Project
+6) Associate Project to Task
+7) Disassociate Project from Task
+8) Back to Main Menu
+9) Exit
+```
+
+- Option 1) 2) 3) 4) 5) 6) 7) require specific user permissions from current user
+- Option 8) returns to previous menu
+- Option 9) will gracefully close the application (default)
+
+5. **Task Management**
+
+```text
+#### PMS Core! ####
+
+Task Menu [USERID]:
+
+Please select an option:
+
+1) Add Task
+2) Remove Task
+3) Change Task property
+4) Associate User to Task
+5) Disassociate User from Task
+6) Associate Project to Task
+7) Disassociate Project from Task
+8) Back to Main Menu
+9) Exit
+```
+
+- Option 1) 2) 3) 4) 5) 6) 7) require specific user permissions from current user
+- Option 8) returns to previous menu
+- Option 9) will gracefully close the application (default)
+
+Program will run continuously until the user presses the exit option or CTRL+C which will gracefully store all data
+and exit
+

@@ -1,0 +1,14 @@
+@startuml
+enum Permission {
+    CanCreateProject= 0,
+    CanChangeProjectProperty,
+    CanDeleteProject,
+    CanCreateTask,
+    CanChangeTaskProperty,
+    CanDeleteTask,
+    CanGenerateEntityReport,
+    CanDeleteUser,
+    CanChangeUser,
+    CanGenerateUserReport,
+}
+@enduml

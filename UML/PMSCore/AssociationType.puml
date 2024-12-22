@@ -1,0 +1,6 @@
+@startuml
+enum AssociationType {
+    Associate,
+    Disassociate,
+}
+@enduml

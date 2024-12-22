@@ -1,0 +1,48 @@
+@startuml
+class StateManager {
+    - StateManager(logger:ILogger?)
+    + {static} GetInstance(logger:ILogger?) : StateManager
+    + {static} ResetInstance() : void
+    - AppendMessageToReport(message:string) : void
+    + GetReport() : string
+    - FindObjectExists(entityId:string, objectType:ObjectType) : EntityState
+    + UserLogin(username:string) : EntityState
+    + UserLogout() : EntityState
+    + UserRegister(username:string, user:IUser) : EntityState
+    + DeleteUser(username:string) : EntityState
+    + CreateEntity(entityType:EntityType, entityId:string, description:string?) : EntityState
+    + RemoveEntity(entityId:string) : EntityState
+    + GetEntityProperty(id:string, property:EntityProperty) : (EntityState, object?)
+    + UpdateEntityProperty(entityId:string, property:EntityProperty, value:object?) : EntityState
+    + UpdateUserProperty(userId:string, property:UserProperty, value:object) : EntityState
+    + GetUserReport(userId:string) : object
+    + GetUserAssociations(userId:string) : object
+    + AssociateUserToEntity(entityId:string, userId:string) : AssociationStatus
+    + DisassociateUserFromEntity(entityId:string, userId:string) : AssociationStatus
+    - AssociateEntities(projectId:string, taskId:string) : AssociationStatus
+    + AssociateEntityToEntity(entityA:string, entityB:string) : AssociationStatus
+    - DisassociateEntities(projectId:string, taskId:string) : AssociationStatus
+    + DisassociateEntityFromEntity(entityA:string, entityB:string) : AssociationStatus
+    + GetCurrentUser() : IUser
+    - SetPersistencePath() : void
+    - DeserializeObjects(path:string, objectToDeserialize:T?) : T?
+    - LoadFromPersistence() : void
+    + <<async>> StoreToPersistence() : Task<bool>
+    - {static} _singleInstance : StateManager?
+    - {static} _logger : ILogger
+    - _users : Dictionary<string, User>?
+    - _entities : Dictionary<string, Entity>?
+    - _userToEntityAssociation : Dictionary<string, HashSet<string>>?
+    - _entityToEntityAssociation : Dictionary<string, HashSet<string>>?
+    - _currentUser : IUser?
+    - _report : string
+    - {static} <<readonly>> _createLock : object
+    - PersistencePath : string <<get>> <<set>>
+    + FileRead : bool <<get>> = true
+}
+enum ObjectType {
+    Entity,
+    User,
+}
+StateManager +-- ObjectType
+@enduml

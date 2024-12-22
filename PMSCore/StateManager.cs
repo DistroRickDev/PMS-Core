@@ -21,7 +21,7 @@ public class StateManager
     /// <returns></returns>
     public static StateManager GetInstance(ILogger? logger = null)
     {
-        lock(_createLock)
+        lock (_createLock)
         {
             if (_singleInstance == null)
             {
@@ -281,6 +281,78 @@ public class StateManager
 
         _logger.LogError($"Entity {entityId} not settable");
         return EntityState.Forbidden;
+    }
+
+    /// <summary>
+    /// Updates a user property (userId | Permission)
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="property"></param>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    public EntityState UpdateUserProperty(string userId, UserProperty property, object value)
+    {
+        if (!_users.TryGetValue(userId, out var user))
+        {
+            _logger.LogError($"User {userId} does not exist");
+            return EntityState.NotFound;
+        }
+
+        switch (property)
+        {
+            case UserProperty.ChangeUserId:
+                if (value is not string)
+                {
+                    _logger.LogError($"Cannot update entity property {property} because value is not a string");
+                    return EntityState.Forbidden;
+                }
+
+                return user.ChangeUserId((string)value) == UserOperationResult.Ok
+                    ? EntityState.Ok
+                    : EntityState.Forbidden;
+
+            case UserProperty.AddPermissions or UserProperty.RemovePermissions:
+                if (value is not Permission permission)
+                {
+                    _logger.LogError($"Cannot update entity property {property} because value is not a Permission");
+                    return EntityState.Forbidden;
+                }
+
+                var removeUserPermission = property == UserProperty.AddPermissions
+                    ? user.AddUserPermission(permission)
+                    : user.RemoveUserPermission(permission);
+                return removeUserPermission == UserOperationResult.Ok ? EntityState.Ok : EntityState.Forbidden;
+        }
+
+        return EntityState.Forbidden;
+    }
+
+    /// <summary>
+    /// Returns a summary of user associations
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public (EntityState, string?) GetUserAssociations(string userId)
+    {
+        if (!_users.ContainsKey(userId))
+        {
+            _logger.LogError($"User {userId} does not exist");
+            return (EntityState.NotFound, null);
+        }
+
+        if (!_userToEntityAssociation.ContainsKey(userId))
+        {
+            _logger.LogError($"User {userId} does not have associations");
+            return (EntityState.NotFound, null);
+        }
+
+        string associationDetails = string.Empty;
+        foreach (var entity in _userToEntityAssociation[userId])
+        {
+            associationDetails += $"[{userId} is associated with {entity.GetId()}\n";
+        }
+
+        return (EntityState.Ok, associationDetails);
     }
 
     /// <summary>

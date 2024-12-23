@@ -1,0 +1,8 @@
+@startuml
+class Project {
+    + Project(id:string, description:string?, status:EntityStatus, priority:EntityPriority, createdDate:DateTime, startedDate:DateTime?, finishedDate:DateTime?)
+    - Project(id:string, description:string?)
+    + {static} CreateProject(callerLogger:ILogger, id:string?, description:string?) : Project?
+}
+Entity <|-- Project
+@enduml

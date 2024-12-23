@@ -1,0 +1,10 @@
+@startuml
+enum EntityPriority {
+    Lowest= 0,
+    Low,
+    Medium,
+    High,
+    VeryHigh,
+    Critical,
+}
+@enduml

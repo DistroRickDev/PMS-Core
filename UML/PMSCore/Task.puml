@@ -1,0 +1,8 @@
+@startuml
+class Task {
+    + Task(id:string, description:string?, status:EntityStatus, priority:EntityPriority, createdDate:DateTime, startedDate:DateTime?, finishedDate:DateTime?)
+    - Task(id:string, description:string?)
+    + {static} CreateTask(callerLogger:ILogger, id:string?, description:string?) : Task?
+}
+Entity <|-- Task
+@enduml

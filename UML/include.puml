@@ -1,0 +1,32 @@
+@startuml
+!include .PMSCore/PmsCoreMenu.puml
+!include .PMSCore/StateManager.puml
+!include .PMSCore/PmsLogger.puml
+!include .PMSCore/UserOperationResult.puml
+!include .PMSCore/Developer.puml
+!include .PMSCore/EntityJsonConverter.puml
+!include .PMSCore/UserJsonConverter.puml
+!include .PMSCore/Project.puml
+!include .PMSCore/PmsLoggerProvider.puml
+!include .PMSCore/AssociationType.puml
+!include .PMSCore/EntityType.puml
+!include .PMSCore/UserProperty.puml
+!include .PMSCore/EntityState.puml
+!include .PMSCore/Admin.puml
+!include .PMSCore/EntityStatus.puml
+!include .PMSCore/AssociationStatus.puml
+!include .PMSCore/EntityProperty.puml
+!include .PMSCore/Task.puml
+!include .PMSCore/IUser.puml
+!include .PMSCore/Permission.puml
+!include .PMSCore/Program.puml
+!include .PMSCore/User.puml
+!include .PMSCore/ProjectManager.puml
+!include .PMSCore/EntityPriority.puml
+!include .PMSCore/UserType.puml
+!include .PMSCore/Tester.puml
+!include .PMSCore/Entity.puml
+!include .obj/Debug/net6.0/.NETCoreApp,Version=v6.0.AssemblyAttributes.puml
+!include .obj/Debug/net6.0/PMSCore.AssemblyInfo.puml
+!include .obj/Debug/net6.0/PMSCore.GlobalUsings.g.puml
+@enduml

@@ -1,0 +1,8 @@
+@startuml
+enum UserType {
+    Admin,
+    ProjectManager,
+    Developer,
+    Tester,
+}
+@enduml

@@ -1,0 +1,6 @@
+@startuml
+class Developer {
+    + Developer(userId:string)
+}
+User <|-- Developer
+@enduml

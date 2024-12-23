@@ -1,0 +1,9 @@
+@startuml
+class PmsLoggerProvider {
+    + PmsLoggerProvider(logFilePath:string)
+    + CreateLogger(handlerName:string) : ILogger
+    + Dispose() : void
+    - <<readonly>> _logFileBuffer : StreamWriter
+}
+ILoggerProvider <|-- PmsLoggerProvider
+@enduml

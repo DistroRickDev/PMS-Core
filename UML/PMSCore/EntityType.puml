@@ -1,0 +1,6 @@
+@startuml
+enum EntityType {
+    Project= 0,
+    Task,
+}
+@enduml

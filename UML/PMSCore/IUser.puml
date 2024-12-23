@@ -1,0 +1,20 @@
+@startuml
+interface IUser {
+    GetUserId() : string
+    CreateEntity(type:EntityType, entityId:string, entityDescription:string?) : UserOperationResult
+    ChangeEntityProperty(type:EntityType, entityId:string, property:EntityProperty, propertyValue:object?) : UserOperationResult
+    DeleteEntity(type:EntityType, entityId:string) : UserOperationResult
+    AssociateEntityToEntity(entityIdA:string, entityIdB:string) : UserOperationResult
+    DissociateEntityFromEntity(entityIdA:string, entityIdB:string) : UserOperationResult
+    GenerateEntityReport(entityId:string) : object
+    DeleteUser(userId:string) : UserOperationResult
+    GetUserAssociations(userId:string) : object
+    AssociateUserWithEntity(userId:string, entityId:string) : UserOperationResult
+    DisassociateUserWithEntity(userId:string, entityId:string) : UserOperationResult
+    CheckUserPermission(permission:Permission) : UserOperationResult
+    AddUserPermission(userId:string, permission:Permission) : UserOperationResult
+    RemoveUserPermission(userId:string, permission:Permission) : UserOperationResult
+    ChangeUserId(userId:string, newUserId:string) : UserOperationResult
+    GenerateUserReport(userId:string) : object
+}
+@enduml

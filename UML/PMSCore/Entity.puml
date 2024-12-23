@@ -1,0 +1,30 @@
+@startuml
+abstract class Entity {
+    # Entity(entityType:EntityType, id:string, description:string?, status:EntityStatus, priority:EntityPriority, createdDate:DateTime, startedDate:DateTime?, finishedDate:DateTime?)
+    # Entity(entityType:EntityType, id:string, description:string?)
+    # AppendMessageToReport(message:string) : void
+    + GetId() : string
+    + GetDescription() : string
+    + SetDescription(description:string) : void
+    + GetStatus() : EntityStatus
+    + SetStatus(status:EntityStatus) : void
+    + GetPriority() : EntityPriority
+    + SetPriority(priority:EntityPriority) : void
+    + GetCreatedDate() : DateTime
+    + GetStartedDate() : DateTime?
+    + SetStartedDate(startedDate:DateTime) : void
+    + GetFinishedDate() : DateTime?
+    + SetFinishedDate(finishedDate:DateTime) : void
+    + DisplayEntityDetails() : string
+    + GetReport() : string
+    + Type : EntityType <<get>> <<set>>
+    + Id : string <<get>> <<set>>
+    + Description : string? <<get>> <<set>>
+    + Status : EntityStatus <<get>> <<set>>
+    + Priority : EntityPriority <<get>> <<set>>
+    + CreatedDate : DateTime <<get>> <<set>>
+    + StartedDate : DateTime? <<get>> <<set>>
+    + FinishedDate : DateTime? <<get>> <<set>>
+    - Report : string <<get>> <<set>>
+}
+@enduml

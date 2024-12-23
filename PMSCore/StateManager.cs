@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace PMSCore;
 
 /// <summary>
@@ -7,11 +9,12 @@ public class StateManager
 {
     private StateManager(ILogger? logger)
     {
-        _logger = logger ?? new LoggerFactory().CreateLogger("StateManager");
-        _users = new();
-        _entities = new();
-        _userToEntityAssociation = new();
-        _entityToEntityAssociation = new();
+        SetPersistencePath();
+        _logger = logger ?? LoggerFactory
+            .Create(builder =>
+                builder.AddProvider(new PmsLoggerProvider(Path.Combine(PersistencePath!, "PMSCore-StateManager.log"))))
+            .CreateLogger("StateManager");
+        LoadFromPersistence();
         _report = string.Empty;
     }
 
@@ -23,12 +26,7 @@ public class StateManager
     {
         lock (_createLock)
         {
-            if (_singleInstance == null)
-            {
-                _singleInstance = new StateManager(logger);
-            }
-
-            return _singleInstance;
+            return _singleInstance ??= new StateManager(logger);
         }
     }
 
@@ -102,6 +100,19 @@ public class StateManager
         return EntityState.Ok;
     }
 
+    public EntityState UserLogout()
+    {
+        if (_currentUser == null)
+        {
+            AppendMessageToReport("User not logged in");
+            return EntityState.NotFound;
+        }
+
+        AppendMessageToReport($"Logging out of user {_currentUser.GetUserId()}");
+        _currentUser = null;
+        return EntityState.Ok;
+    }
+
     /// <summary>
     /// Attempts to register user if it doesn't exist
     /// </summary>
@@ -110,7 +121,7 @@ public class StateManager
     /// <returns></returns>
     public EntityState UserRegister(string username, IUser user)
     {
-        if (!_users.TryAdd(username, user))
+        if (!_users.TryAdd(username, (User)user))
         {
             _logger.LogError($"User {username} already exists please login");
             return EntityState.AlreadyExists;
@@ -142,18 +153,32 @@ public class StateManager
     /// <summary>
     /// Adds a new Entity entry
     /// </summary>
-    /// <param name="entity"></param>
+    /// <param name="entityType"></param>
+    /// <param name="entityId"></param>
+    /// <param name="description"></param>
     /// <returns></returns>
-    public EntityState CreateEntity(Entity entity)
+    public EntityState CreateEntity(EntityType entityType, string entityId, string? description = null)
     {
-        if (FindObjectExists(entity.GetId(), ObjectType.Entity) == EntityState.Ok)
+        if (FindObjectExists(entityId, ObjectType.Entity) == EntityState.Ok)
         {
-            _logger.LogWarning($"Entity {entity.GetId()} already exists");
+            _logger.LogWarning($"Entity {entityId} already exists");
             return EntityState.AlreadyExists;
         }
 
-        _entities.Add(entity.GetId(), entity);
-        AppendMessageToReport($"Entity {entity.GetId()} added");
+        Entity addEntity = entityType switch
+        {
+            EntityType.Project => Project.CreateProject(_logger, entityId, description),
+            EntityType.Task => Task.CreateTask(_logger, entityId, description)
+        };
+
+        if (addEntity == null)
+        {
+            _logger.LogError($"Failed to create entity {entityId}");
+            return EntityState.Forbidden;
+        }
+
+        _entities.Add(entityId, addEntity);
+        AppendMessageToReport($"Entity {entityId} added");
         return EntityState.Ok;
     }
 
@@ -242,45 +267,47 @@ public class StateManager
                 return EntityState.Ok;
 
             case EntityProperty.EntityStatus:
-                if (value is not EntityStatus)
+                if (value is not EntityStatus status)
                 {
                     _logger.LogError($"Cannot update entity property {property} because value is not a EntityStatus");
                     return EntityState.Forbidden;
                 }
 
-                _entities[entityId].SetStatus((EntityStatus)value);
+                if (status == _entities[entityId].GetStatus())
+                {
+                    AppendMessageToReport($"Entity's {entityId}, {property.ToString()} is already {status.ToString()}");
+                    return EntityState.AlreadyExists;
+                }
+
+                switch (status)
+                {
+                    case EntityStatus.InProgress:
+                        _entities[entityId].SetStartedDate(DateTime.UtcNow);
+                        break;
+                    case EntityStatus.Done:
+                        _entities[entityId].SetFinishedDate(DateTime.UtcNow);
+                        break;
+                }
+
+                _entities[entityId].SetStatus(status);
                 AppendMessageToReport($"Entity's {entityId}, {property} updated");
                 return EntityState.Ok;
 
             case EntityProperty.EntityPriority:
-                if (value is not EntityPriority)
+                if (value is not EntityPriority entityPriority)
                 {
                     _logger.LogError($"Cannot update entity property {property} because value is not a EntityPriority");
                     return EntityState.Forbidden;
                 }
 
-                _entities[entityId].SetPriority((EntityPriority)value);
+                _entities[entityId].SetPriority(entityPriority);
                 AppendMessageToReport($"Entity's {entityId}, {property} updated");
                 return EntityState.Ok;
 
-            case EntityProperty.StartedDate:
-            case EntityProperty.FinishedDate:
-                if (value is not DateTime)
-                {
-                    _logger.LogError($"Cannot update entity property {property} because value is not a DateTime");
-                    return EntityState.Forbidden;
-                }
-
-                if (property == EntityProperty.StartedDate)
-                    _entities[entityId].SetStartedDate((DateTime)value);
-                if (property == EntityProperty.FinishedDate)
-                    _entities[entityId].SetFinishedDate((DateTime)value);
-                AppendMessageToReport($"Entity's {entityId}, {property} updated");
-                return EntityState.Ok;
+            default:
+                _logger.LogError($"{property} not settable");
+                return EntityState.Forbidden;
         }
-
-        _logger.LogError($"Entity {entityId} not settable");
-        return EntityState.Forbidden;
     }
 
     /// <summary>
@@ -301,30 +328,53 @@ public class StateManager
         switch (property)
         {
             case UserProperty.ChangeUserId:
-                if (value is not string)
+                if (value is not string s)
                 {
-                    _logger.LogError($"Cannot update entity property {property} because value is not a string");
+                    _logger.LogError(
+                        $"Cannot update user property {property.ToString()} because value is not a string");
                     return EntityState.Forbidden;
                 }
 
-                return user.ChangeUserId((string)value) == UserOperationResult.Ok
-                    ? EntityState.Ok
-                    : EntityState.Forbidden;
+                if (string.IsNullOrEmpty(s))
+                {
+                    _logger.LogError($"Cannot update user property {property.ToString()} because user id is empty");
+                    return EntityState.Forbidden;
+                }
 
+                _users.Remove(userId);
+                _users.Add(s, user);
+                _logger.LogInformation($"User {userId} updated to {s}");
+                return EntityState.Ok;
             case UserProperty.AddPermissions or UserProperty.RemovePermissions:
+            default:
                 if (value is not Permission permission)
                 {
-                    _logger.LogError($"Cannot update entity property {property} because value is not a Permission");
+                    _logger.LogError(
+                        $"Cannot update user property {property.ToString()} because value is not a Permission");
                     return EntityState.Forbidden;
                 }
 
                 var removeUserPermission = property == UserProperty.AddPermissions
-                    ? user.AddUserPermission(permission)
-                    : user.RemoveUserPermission(permission);
-                return removeUserPermission == UserOperationResult.Ok ? EntityState.Ok : EntityState.Forbidden;
+                    ? user.UserPermissions.Add(permission)
+                    : user.UserPermissions.Remove(permission);
+                return removeUserPermission ? EntityState.Ok : EntityState.Forbidden;
+        }
+    }
+
+    /// <summary>
+    /// Returns a given user report
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    public object GetUserReport(string userId)
+    {
+        if (!_users.TryGetValue(userId, out var user))
+        {
+            _logger.LogError($"User {userId} does not exist");
+            return EntityState.NotFound;
         }
 
-        return EntityState.Forbidden;
+        return user.UserReport;
     }
 
     /// <summary>
@@ -332,27 +382,27 @@ public class StateManager
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public (EntityState, string?) GetUserAssociations(string userId)
+    public object GetUserAssociations(string userId)
     {
-        if (!_users.ContainsKey(userId))
+        if (!_userToEntityAssociation.TryGetValue(userId, out var value))
         {
             _logger.LogError($"User {userId} does not exist");
-            return (EntityState.NotFound, null);
+            return EntityState.NotFound;
         }
 
-        if (!_userToEntityAssociation.ContainsKey(userId))
+        if (value.Count == 0)
         {
             _logger.LogError($"User {userId} does not have associations");
-            return (EntityState.NotFound, null);
+            return EntityState.NotFound;
         }
 
         string associationDetails = string.Empty;
-        foreach (var entity in _userToEntityAssociation[userId])
+        foreach (var entityId in value)
         {
-            associationDetails += $"[{userId} is associated with {entity.GetId()}\n";
+            associationDetails += $"[{userId} is associated with {entityId}\n";
         }
 
-        return (EntityState.Ok, associationDetails);
+        return associationDetails;
     }
 
     /// <summary>
@@ -375,19 +425,19 @@ public class StateManager
             return AssociationStatus.EntityNotFound;
         }
 
-        if (_userToEntityAssociation.TryAdd(userId, new HashSet<Entity> { _entities[entityId] }))
+        if (_userToEntityAssociation.TryAdd(userId, new HashSet<string> { entityId }))
         {
             AppendMessageToReport($"New User {userId} is associated to {entityId}");
             return AssociationStatus.NoError;
         }
 
-        if (_userToEntityAssociation[userId].Contains(_entities[entityId]))
+        if (_userToEntityAssociation[userId].Contains(entityId))
         {
             _logger.LogDebug($"User {userId} is already associated to entity {entityId}");
             return AssociationStatus.DuplicatedAssociation;
         }
 
-        _userToEntityAssociation[userId].Add(_entities[entityId]);
+        _userToEntityAssociation[userId].Add(entityId);
         AppendMessageToReport($"User {userId} add associated to entity {entityId}");
         return AssociationStatus.NoError;
     }
@@ -398,7 +448,7 @@ public class StateManager
     /// <param name="entityId"></param>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public AssociationStatus DisassociateUserToEntity(string entityId, string userId)
+    public AssociationStatus DisassociateUserFromEntity(string entityId, string userId)
     {
         if (FindObjectExists(userId, ObjectType.User) != EntityState.Ok)
         {
@@ -412,14 +462,13 @@ public class StateManager
             return AssociationStatus.EntityNotFound;
         }
 
-        if (!_userToEntityAssociation.ContainsKey(userId) ||
-            _userToEntityAssociation[userId].Contains(_entities[entityId]))
+        if (!_userToEntityAssociation.TryGetValue(userId, out var set) || !set.Contains(entityId))
         {
-            _logger.LogError($"User {userId} did not have associated to entity {entityId}");
+            _logger.LogError($"User {userId} has no entity association or is not associated to entity {entityId}");
             return AssociationStatus.NoAssociation;
         }
 
-        _userToEntityAssociation[userId].Remove(_entities[entityId]);
+        _userToEntityAssociation[userId].Remove(entityId);
         AppendMessageToReport($"User {userId} remove associated from entity {entityId}");
         return AssociationStatus.NoError;
     }
@@ -427,25 +476,25 @@ public class StateManager
     /// <summary>
     /// Internally associates project to task
     /// </summary>
-    /// <param name="project"></param>
-    /// <param name="task"></param>
+    /// <param name="projectId"></param>
+    /// <param name="taskId"></param>
     /// <returns></returns>
-    private AssociationStatus AssociateEntities(Entity project, Entity task)
+    private AssociationStatus AssociateEntities(string projectId, string taskId)
     {
-        if (_entityToEntityAssociation.TryAdd(project.GetId(), new HashSet<Entity> { task }))
+        if (_entityToEntityAssociation.TryAdd(projectId, new HashSet<string> { taskId }))
         {
-            _logger.LogWarning($"New project {project.GetId()} is associated to task {task.GetId()}");
+            _logger.LogWarning($"New project {projectId} is associated to task {taskId}");
             return AssociationStatus.NoError;
         }
 
-        if (_entityToEntityAssociation[project.GetId()].Contains(task))
+        if (_entityToEntityAssociation.TryGetValue(projectId, out var set) && set.Contains(taskId))
         {
-            _logger.LogWarning($"Project {project.GetId()} already associated to task {task.GetId()}");
+            _logger.LogWarning($"Project {projectId} already associated to task {taskId}");
             return AssociationStatus.DuplicatedAssociation;
         }
 
-        _entityToEntityAssociation[project.GetId()].Add(task);
-        AppendMessageToReport($"Project {project.GetId()} associated to task {task.GetId()}");
+        _entityToEntityAssociation[projectId].Add(taskId);
+        AppendMessageToReport($"Project {projectId} associated to task {taskId}");
         return AssociationStatus.NoError;
     }
 
@@ -464,14 +513,14 @@ public class StateManager
             return AssociationStatus.EntityNotFound;
         }
 
-        if (_entities[entityA] is Project && _entities[entityB] is Task)
+        if (_entities[entityA].Type == EntityType.Project && _entities[entityB].Type == EntityType.Task)
         {
-            return AssociateEntities(_entities[entityA], _entities[entityB]);
+            return AssociateEntities(entityA, entityB);
         }
 
-        if (_entities[entityA] is Task && _entities[entityB] is Project)
+        if (_entities[entityA].Type == EntityType.Task && _entities[entityB].Type == EntityType.Project)
         {
-            return AssociateEntities(_entities[entityB], _entities[entityA]);
+            return AssociateEntities(entityB, entityA);
         }
 
         _logger.LogError($"Cannot associate entity {entityA} to {entityB}");
@@ -481,20 +530,19 @@ public class StateManager
     /// <summary>
     /// Internally disassociates project to task
     /// </summary>
-    /// <param name="project"></param>
-    /// <param name="task"></param>
+    /// <param name="projectId"></param>
+    /// <param name="taskId"></param>
     /// <returns></returns>
-    private AssociationStatus DisassociateEntities(Entity project, Entity task)
+    private AssociationStatus DisassociateEntities(string projectId, string taskId)
     {
-        if (!_entityToEntityAssociation.ContainsKey(project.GetId()) ||
-            !_entityToEntityAssociation[project.GetId()].Contains(task))
+        if (!_entityToEntityAssociation.TryGetValue(projectId, out var set) || !set.Contains(taskId))
         {
-            _logger.LogError($"Project {project.GetId()} is not associated to task {task.GetId()}");
+            _logger.LogError($"Project {projectId} has no associations or is not associated to task {taskId}");
             return AssociationStatus.NoAssociation;
         }
 
-        _entityToEntityAssociation[project.GetId()].Remove(task);
-        AppendMessageToReport($"Project {project.GetId()} removed association to task {task.GetId()}");
+        _entityToEntityAssociation[projectId].Remove(taskId);
+        AppendMessageToReport($"Project {projectId} removed association to task {taskId}");
         return AssociationStatus.NoError;
     }
 
@@ -504,7 +552,7 @@ public class StateManager
     /// <param name="entityA"></param>
     /// <param name="entityB"></param>
     /// <returns></returns>
-    public AssociationStatus DisassociateEntityToEntity(string entityA, string entityB)
+    public AssociationStatus DisassociateEntityFromEntity(string entityA, string entityB)
     {
         if (FindObjectExists(entityA, ObjectType.Entity) != EntityState.Ok ||
             FindObjectExists(entityB, ObjectType.Entity) != EntityState.Ok)
@@ -513,28 +561,104 @@ public class StateManager
             return AssociationStatus.EntityNotFound;
         }
 
-        if (_entities[entityA] is Project && _entities[entityB] is Task)
+        if (_entities![entityA].Type == EntityType.Project && _entities[entityB].Type is EntityType.Task)
         {
-            return DisassociateEntities(_entities[entityA], _entities[entityB]);
+            return DisassociateEntities(entityA, entityB);
         }
 
         if (_entities[entityA] is Task && _entities[entityB] is Project)
         {
-            return DisassociateEntities(_entities[entityB], _entities[entityA]);
+            return DisassociateEntities(entityB, entityA);
         }
 
         _logger.LogError($"Cannot disassociate entity {entityA} to {entityB}");
         return AssociationStatus.InvalidAssociation;
     }
 
+    /// <summary>
+    /// Returns logged user
+    /// </summary>
+    /// <returns></returns>
+    public IUser GetCurrentUser() => _currentUser;
+
+    private void SetPersistencePath()
+    {
+        PersistencePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "PMSCore");
+        if (!Directory.Exists(PersistencePath))
+        {
+            Directory.CreateDirectory(PersistencePath);
+        }
+    }
+
+    private T? DeserializeObjects<T>(string path, T? objectToDeserialize)
+    {
+        if (!File.Exists(path))
+        {
+            _logger.LogError($"File {path} does not exist");
+            return default;
+        }
+
+        var json = File.ReadAllText(path);
+        if (string.IsNullOrEmpty(json))
+        {
+            _logger.LogError($"File {path} dis empty");
+            return default;
+        }
+
+        objectToDeserialize = JsonSerializer.Deserialize<T>(json);
+        if (objectToDeserialize == null)
+        {
+            _logger.LogError($"{path} file not found or failed to load from persistence");
+            return default;
+        }
+
+        return objectToDeserialize;
+    }
+
+    /// <summary>
+    /// Loads json data and deserializes it back to data
+    /// </summary>
+    private void LoadFromPersistence()
+    {
+        _entities = DeserializeObjects(Path.Combine(PersistencePath, "entities.json"), _entities) ?? new();
+        _users = DeserializeObjects(Path.Combine(PersistencePath, "users.json"), _users) ?? new();
+        _entityToEntityAssociation =
+            DeserializeObjects(Path.Combine(PersistencePath, "entityToEntity.json"), _entityToEntityAssociation) ??
+            new();
+        _userToEntityAssociation =
+            DeserializeObjects(Path.Combine(PersistencePath, "userToEntity.json"), _userToEntityAssociation) ?? new();
+        FileRead = true;
+    }
+
+    /// <summary>
+    /// Async method stores all data into json
+    /// </summary>
+    /// <returns></returns>
+    public async Task<bool> StoreToPersistence()
+    {
+        var options = new JsonSerializerOptions();
+        options.WriteIndented = true;
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "entities.json"),
+            JsonSerializer.Serialize(_entities, options));
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "users.json"),
+            JsonSerializer.Serialize(_users, options));
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "entityToEntity.json"),
+            JsonSerializer.Serialize(_entityToEntityAssociation, options));
+        await File.WriteAllTextAsync(Path.Combine(PersistencePath, "userToEntity.json"),
+            JsonSerializer.Serialize(_userToEntityAssociation, options));
+        return true;
+    }
+
     private static StateManager? _singleInstance;
     private static ILogger _logger;
-    private static Dictionary<string, IUser> _users;
-    private static Dictionary<string, Entity> _entities;
-    private static Dictionary<string, HashSet<Entity>> _userToEntityAssociation;
-    private static Dictionary<string, HashSet<Entity>> _entityToEntityAssociation;
-    private static IUser? _currentUser;
-    private static string _report;
+    private Dictionary<string, User>? _users;
+    private Dictionary<string, Entity>? _entities;
+    private Dictionary<string, HashSet<string>>? _userToEntityAssociation;
+    private Dictionary<string, HashSet<string>>? _entityToEntityAssociation;
+    private IUser? _currentUser;
+    private string _report;
     private static readonly object _createLock = new();
-    private readonly string DataStoragePath = "Data.json";
+    private string PersistencePath { get; set; }
+    public bool FileRead { get; private set; } = true;
 }

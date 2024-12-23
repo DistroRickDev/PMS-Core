@@ -1,5 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using PMSCore.Test;
+using Xunit.Abstractions;
 
 namespace PMSCore.Test
 {
@@ -8,7 +10,13 @@ namespace PMSCore.Test
     /// </summary>
     public class TaskTest
     {
+        private readonly ITestOutputHelper _testOutputHelper;
         private readonly ILogger _testLogger = new LoggerFake();
+
+        public TaskTest(ITestOutputHelper testOutputHelper)
+        {
+            _testOutputHelper = testOutputHelper;
+        }
 
         /// <summary>
         /// Checks if the Task is created with the right values.
@@ -85,6 +93,19 @@ namespace PMSCore.Test
             var task = Task.CreateTask(_testLogger, null, "description");
             Assert.Null(task);
             Assert.Contains("Failed to create Task reason: empty id", (_testLogger as LoggerFake)!.LogStream);
+        }
+
+        [Fact]
+        public void TaskTest_JsonTest()
+        {
+            Entity task = Task.CreateTask(_testLogger, "ToBeSerializedId", "description")!;
+            var jsonObj = JsonSerializer.Serialize(task);
+            Assert.NotNull(jsonObj);
+            _testOutputHelper.WriteLine(jsonObj);
+            var desTask = JsonSerializer.Deserialize<Entity>(jsonObj);
+            Assert.NotNull(desTask);
+            Assert.Equal("ToBeSerializedId", desTask!.GetId());
+            Assert.Equal("description", desTask.GetDescription());
         }
     }
 }

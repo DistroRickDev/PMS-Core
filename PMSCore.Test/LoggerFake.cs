@@ -7,9 +7,10 @@ using Microsoft.Extensions.Logging;
 /// </summary>
 public class LoggerFake : ILogger
 {
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception,
+        Func<TState, Exception?, string> formatter)
     {
-        LogStream+= state?.ToString();
+        LogStream += state?.ToString();
     }
 
     public bool IsEnabled(LogLevel logLevel)
@@ -21,6 +22,6 @@ public class LoggerFake : ILogger
     {
         throw new NotImplementedException();
     }
-    
+
     public string LogStream { get; private set; } = string.Empty;
 }
